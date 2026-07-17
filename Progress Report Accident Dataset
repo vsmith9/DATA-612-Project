@@ -1,0 +1,57 @@
+---
+title: "DATA 612 Progress Report"
+format: html
+editor: visual
+---
+
+Code below loads the accident file and returns the first few rows of the dataset:
+
+```{r}
+accident <- read_csv("FARS2024NationalCSV/accident.csv")
+
+head(accident)
+
+```
+– 1. Who are the individuals under study in this data set? That is, what does each row
+
+of your data set correspond to? 
+Each row in the dataset corresponds to a fatal motor vehicle crash in 2024.
+
+
+– 2. How many individuals are in your study?
+
+There are 36297 vehcile crashes in this study
+
+```{r}
+nrow(accident)
+```
+–3. Are there repeated measurements on individuals? (Such as measurements taken
+
+over time on the same individual?)
+
+There are no repeated measurements in this dataset since each row corresponds to a unique accident, although the same accident appears in multiple tables (vehicle.csv, person.csv), which is why they will be joined.
+
+- 4. How many total variables are in the data set? Which variables are of interest to
+
+you? How does each variable connect to your specific questions?
+
+There are 80 variables in the dataset. The ones of interest are:
+ST_CASE: used as the primary key to join other datasets
+For weekday vs. weekend analysis: DAY_WEEK, DAY_WEEKEND
+Night vs day: HOUR, LGT_COND, LGT_CONDNAME
+Rural vs. Urban setting: RUR_URB, RUR_URBNAME
+Location Specific: STATE, COUNTY, CITY
+
+```{r}
+ncol(accident)
+str(accident)
+```
+
+– 5. What data tidying steps do you anticipate having to do to get a clean data set for
+
+the remaining analyses? 
+
+For the accident dataset, we expect to clean the dataset by converting some categorical variables into simpler groups, such as using DAY_WEEK to define weekends vs. weekdays, and using HOUR and LGT_COND to classify varaibles into night vs. day. 
+
+– 6. For some groups, how do you plan to combine from different data sets?
+You can add options to executable code like this: DATA 2 Person
