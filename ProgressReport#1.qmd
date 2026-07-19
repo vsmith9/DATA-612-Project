@@ -1,0 +1,220 @@
+------------------------------------------------------------------------
+
+title: "ProgressReport#1"
+
+# Project Title:
+
+Examining Patterns and Predictors of Fatal Vehicle Crashes Across Geographic and Temporal Factors
+
+# Group Members:
+
+- Victoria Smith, DATA-612
+- David Byrd, DATA-612
+- Guanhao Jing, DATA-612
+- Precious Aimufua-Agbontaen, DATA-612
+
+# Project Overview:
+
+This project examines the patterns and predictors of fatal vehicle crashes across the United States using data from the Fatality Analysis Reporting System (FARS). We investigate how crash outcomes vary based on geographic, temporal, vehicle, and driver characteristics. Our analysis incorporates reported crash circumstances, vehicle characteristics, driver and passenger data, geographic, and time variables. These variables include numerical, categorical, geographic, and temporal measures that allow us to explore the predicting factors associated with fatal crashes and identify patterns.
+
+As we began exploring the literature and conducting analysis of our data, our revised research question, corresponding hypotheses, independent and dependent variables, key predictors, and methods can be found below:
+
+## Research Question #1
+
+- Do rural fatal crashes involve more fatalities per crash than urban fatal crashes, and how are crash, road, and driver characteristics related to this difference?
+
+### Hypotheses
+
+- Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes. Crash, roadway, and driver characteristics are not associated with the number of fatalities per crash.
+- Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes. Crash, roadway, and driver characteristics are associated with the number of fatalities per crash.
+
+### Variables
+
+- Independent: Geographic location (RUR_URB)
+- Dependent: Number of fatalities (FATALS)
+
+### Key Predictors
+
+- RUR_URB, speed limit (VSPD_LIM), weather, lighting (LGT_COND), time of day (HOUR), driver age, alcohol (DRINKING), travel speed (TRAV_SP), rollover, road classification (FUNC_SYS), speed‑related indicator (SPEEDREL).
+
+### Methods
+
+- Two‑sample tt-test or similar for mean fatalities rural vs urban
+- Multiple or negative binomial regression with these predictors
+
+## Research Question #2:
+
+- Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+### Hypotheses
+
+- Null hypothesis: There is no difference between the number of crashes that occur on the weekends versus the weekdays, and these are no significant difference in the timing or types of vehicles involved.
+- Alternative hypothesis: The frequency of fatal crashes differs between weekends and weekdays, and the timing and types of vehicles differ between weekend and weekday crashes.
+
+### Variables
+
+- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+- Dependent variable: Weekend (weekend vs weekday).
+
+### Key Predictors
+
+- HOUR, lighting (LGT_COND), rural/urban (RUR_URB), state, vehicle body type (VPICBODY), speed‑related indicators.
+
+### Methods
+
+- Compare the frequency of fatal crashes that occur on weekends vs weekdays.
+- Logistic regression for weekend vs weekday with crash and vehicle predictors.
+
+## Research Question #3:
+
+- For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+### Hypotheses
+
+- Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
+- Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
+
+### Variables
+
+- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+- Dependent variable A: Weekend (weekend vs weekday).
+- Dependent variable B: Night vs Day (using HOUR and/or LGT_COND to define night/day).
+
+### Key Predictors
+
+- State (STATE), rural/urban (RUR_URB), weather, lighting (LGT_COND), time (HOUR), travel speed (TRAV_SP), speed‑related (SPEEDREL), rollover, driver alcohol (DRINKING), age, sex.
+
+### Methods
+
+- Binary logistic regression with variable selection to identify which predictors matter for weekend vs weekday and night vs day.
+
+# Literature Review:
+
+- (Shrestha and Shrestha, 2017) Factors associated with crash severities in built-up areas along rural highways of Nevada: A case study of 11 towns
+
+  This study examined over 300 crashes in built-up areas along rural highways in Nevada using binary logistic regression to identify factors associated with the crashes. Authors found that speeding, nighttime driving, weekday travel, and motorcycle involvement increased likelihood of injury crashes.
+
+- (Liu and Subramanian, 2009) Factors Related to Fatal Single-Vehicle Run-Off-Road Crashes
+
+  This report analyzed the FARS data to identify roadway, driver, environmental, and vehicle factors associated with fata single-vehicle crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
+
+- (Zwerling, et al, 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors
+
+  This study compared fatal motor vehicle crashes in rural and urban areas. The study concluded that the higher rural fatality rate is associated with greater crash severity and higher injury rate rather than higher frequency of crashes.
+
+- (Ferenchak and Ghodrat Abadi, 2021) Nighttime pedestrian fatalities: A comprehensive examination of infrastructure, user, vehicle, and situational factors
+
+  This study used FARS data to investigate the increase in nighttime pedestrian fatalities in the US. The study found that fatalities increased most on urban arterial roads, non-intersection locations, roads with 40-50 mph speed limits, and crashes involving SUVs.
+
+- (Saha, et.al, 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012
+
+  This study used FARS data to explore whether weather and road conditions affected the number of fatal car crashes between 1994 and 2012. The study found that adverse-weather related fatalities decreased over the period noted above. In addition, the number of fatal crashes associated with adverse weather by state differed from the distribution of total fatalities.
+
+# Data
+
+## Data 1
+
+FARS 2024 Accident File: accident.csv
+
+Code below loads the accident file and returns the first few rows of the dataset:
+
+```{r}
+library(readr)
+accident <- read_csv("FARS2024NationalCSV/accident.csv")
+
+head(accident)
+
+```
+
+– 1. Who are the individuals under study in this data set? That is, what does each row
+
+of your data set correspond to?
+
+Each row in the dataset corresponds to a fatal motor vehicle crash in 2024.
+
+– 2. How many individuals are in your study?
+
+There are 36297 vehicle crashes in this study.
+
+```{r}
+nrow(accident)
+```
+
+–3. Are there repeated measurements on individuals? (Such as measurements taken
+
+over time on the same individual?)
+
+There are no repeated measurements in this dataset since each row corresponds to a unique accident. However, the same accident appears in multiple tables (vehicle.csv, person.csv), which is why we are planning to join them.
+
+- 
+
+  4.  How many total variables are in the data set? Which variables are of interest to
+
+you? How does each variable connect to your specific questions?
+
+There are 80 variables in the dataset. The ones of interest are: ST_CASE: used as the primary key to join other datasets For weekday vs. weekend analysis: DAY_WEEK, DAY_WEEKNAME Night vs day: HOUR, LGT_COND, LGT_CONDNAME Rural vs. Urban setting: RUR_URB, RUR_URBNAME Location Specific: STATE, COUNTY, CITY
+
+```{r}
+ncol(accident)
+str(accident)
+```
+
+– 5. What data tidying steps do you anticipate having to do to get a clean data set for
+
+the remaining analyses?
+
+For the accident dataset, we expect to clean the dataset by converting some categorical variables into simpler groups, such as using DAY_WEEK to define weekends vs. weekdays, and using HOUR and LGT_COND to classify variables into night vs. day.
+
+– 6. For some groups, how do you plan to combine from different data sets? You can add options to executable code like this: DATA 2 Person
+
+Extra Data Exploration:
+
+```{r}
+table(accident$DAY_WEEKNAME)
+
+#Shows number of crashes by day of the week: From the counts, we can see Saturday and Sunday have more crashes than most weekdays.
+```
+
+```{r}
+table(accident$LGT_CONDNAME)
+
+#Shows number of crashes by light condition (which can potenittaly contribute to night vs. day analysis: From the counts, we can see that daylight crashes are the most common light condition in this dataset.
+```
+
+```{r}
+table(accident$HOUR)
+
+#Shows number of crashes by hour (time of day): From the counts, we can see there are more crashes during the night (14hrs-2 hrs)
+```
+
+```{r}
+table(accident$RUR_URBNAME)
+
+#Shows number of crashes by rural vs. urban setting: From the counts, we can see crashes in urban areas are the most common.
+```
+
+## Data 2
+
+FARS 2024 Vehicle and Personnel Files: vehicle.csv, person.csv
+
+# Member's Tasks
+
+– Data preparation: Cleaning and tidying the data - Victoria/ Guanhao
+
+– Statistical Methods: EDA and any statistical analyses - Victoria/ Guanhao
+
+– Producing the group report - Precious/ David
+
+– Producing the group presentation - Precious/ David
+
+– Rehearsing the presentation - All
+
+– A list of who is responsible for submitting which deliverables in Canvas - Precious
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r}
+1 + 1
+```
