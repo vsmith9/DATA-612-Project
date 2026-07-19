@@ -1,0 +1,178 @@
+---
+title: "progress_report"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+
+vehicle <- read_csv("data/vehicle.csv")
+person <- read_csv("data/person.csv")
+vehicle
+person
+#The vehicle dataset contains 56,011 observations and 201 variables.
+
+#The person dataset contains 88,326 observations and 126 variables.
+```
+
+```{r}
+colSums(is.na(vehicle))
+
+colSums(is.na(person))
+```
+
+```{r}
+#Organize the data that might be of interest to us and put it into a new dataset.
+vehicle_small <- vehicle |>
+  select(ST_CASE, VEH_NO, BODY_TYP, BODY_TYPNAME,
+         MAKE, MAKENAME, MOD_YEAR, MOD_YEARNAME,
+         DEATHS, DR_DRINK, DR_DRINKNAME)
+vehicle_small
+```
+
+```{r}
+# Organize the data that might be of interest to us and put it into a new dataset.
+person_small <- person |>
+  select(ST_CASE, VEH_NO, PER_NO,
+         AGE, AGENAME,
+         SEX, SEXNAME,
+         PER_TYP, PER_TYPNAME,
+         INJ_SEV, INJ_SEVNAME,
+         DRINKING, DRINKINGNAME)
+person_small
+```
+```{r}
+#check for NA
+colSums(is.na(vehicle_small))
+colSums(is.na(person_small))
+```
+
+
+```{r}
+vehicle_small |>
+  count(BODY_TYPNAME, sort = TRUE)
+```
+```{r}
+person_small |>
+  count(PER_TYPNAME, sort = TRUE)
+```
+```{r}
+person_small |>
+  count(SEXNAME, sort = TRUE)
+```
+```{r}
+person_small |>
+  count(DRINKINGNAME, sort = TRUE)
+```
+```{r}
+# Count the number of people in each person type
+person_small |>
+  count(PER_TYPNAME, sort = TRUE) |>
+  ggplot(aes(x = n, y = reorder(PER_TYPNAME, n))) +
+  geom_col() +
+  labs(
+    x = "Number of People",
+    y = "Person Type",
+    title = "People Involved in Fatal Crashes by Person Type"
+  )
+```
+```{r}
+# Count the number of people by sex
+person_small |>
+  count(SEXNAME, sort = TRUE) |>
+  ggplot(aes(x = reorder(SEXNAME, n), y = n)) +
+  geom_col() +
+
+
+  labs(
+    x = "Sex",
+    y = "Number of People",
+    title = "Sex Distribution of People Involved in Fatal Crashes"
+  )
+```
+```{r}
+# Count the number of people by injury severity
+person_small |>
+  count(INJ_SEVNAME, sort = TRUE) |>
+  ggplot(aes(x = n, y = reorder(INJ_SEVNAME, n))) +
+
+  
+  geom_col() +
+  labs(
+    x = "Number of People",
+    y = "Injury Severity",
+    title = "Injury Severity of People Involved in Fatal Crashes"
+  )
+```
+```{r}
+# Count the number of people by drinking status
+person_small |>
+  count(DRINKINGNAME, sort = TRUE) |>
+
+
+  ggplot(aes(x = n, y = reorder(DRINKINGNAME, n))) +
+
+  geom_col() +
+
+  labs(
+    x = "Number of People",
+    y = "Drinking Status",
+    title = "Drinking Status of People Involved in Fatal Crashes"
+  )
+```
+```{r}
+# Count the number of vehicles by body type
+vehicle_small |>
+  count(BODY_TYPNAME, sort = TRUE) |>
+
+  slice_head(n = 10) |>
+
+  ggplot(aes(x = n, y = reorder(BODY_TYPNAME, n))) +
+
+  geom_col() +
+
+  labs(
+    x = "Number of Vehicles",
+    y = "Vehicle Body Type",
+    title = "Top 10 Vehicle Body Types Involved in Fatal Crashes"
+  )
+```
+```{r}
+# Merge the vehicle and person datasets
+vehicle_person <- person_small |>
+  left_join(vehicle_small, by = c("ST_CASE", "VEH_NO"))
+```
+```{r}
+
+
+# Count people by vehicle body type and sex
+vehicle_person |>
+  filter(!is.na(BODY_TYPNAME)) |>
+  filter(SEXNAME == "Female" | SEXNAME == "Male") |>
+  count(BODY_TYPNAME, SEXNAME) |>
+
+  group_by(BODY_TYPNAME) |>
+  mutate(total = sum(n)) |>
+  ungroup() |>
+
+  #top 10 vehicle body types
+  arrange(desc(total)) |>
+  filter(BODY_TYPNAME %in% unique(BODY_TYPNAME)[1:10]) |>
+
+  ggplot(aes(x = reorder(BODY_TYPNAME, total),
+             y = n,
+             fill = SEXNAME)) +
+
+  geom_col(position = "fill") +
+  coord_flip() +
+
+
+  labs(
+    x = "Vehicle Body Type",
+    y = "Proportion",
+    fill = "Sex",
+    title = "Sex Distribution by Vehicle Body Type"
+  )
+```
+
