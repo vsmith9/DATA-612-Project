@@ -39,8 +39,8 @@ As we began exploring the literature and conducting analysis of our data, our re
 
 ### Methods
 
-- Two‑sample tt-test or similar for mean fatalities rural vs urban
-- Multiple or negative binomial regression with these predictors
+- Two‑sample t-test or similar for mean fatalities rural vs urban
+- Multiple or negative binomial regression with these predictors to model the number of fatalities per fatal crash.
 
 ## Research Question #2:
 
@@ -48,8 +48,8 @@ As we began exploring the literature and conducting analysis of our data, our re
 
 ### Hypotheses
 
-- Null hypothesis: There is no difference between the number of crashes that occur on the weekends versus the weekdays, and these are no significant difference in the timing or types of vehicles involved.
-- Alternative hypothesis: The frequency of fatal crashes differs between weekends and weekdays, and the timing and types of vehicles differ between weekend and weekday crashes.
+- Null hypothesis: Within the set of fatal crashes, the distribution of crashes across weekends and weekdays is the same, and there are no differences in timing or vehicle types between weekend and weekday fatal crashes.
+- Alternative hypothesis: Within the set of fatal crashes, the distribution of crashes differs between weekends and weekdays, and/or timing and vehicle types differ between weekend and weekday fatal crashes.
 
 ### Variables
 
@@ -86,7 +86,7 @@ As we began exploring the literature and conducting analysis of our data, our re
 
 ### Methods
 
-- Binary logistic regression with variable selection to identify which predictors matter for weekend vs weekday and night vs day.
+- We will fit binary logistic regression models for weekend vs weekday and for night vs day, using variable selection to identify which state, crash, vehicle, and driver characteristics remain in the final models.
 
 # Literature Review:
 
@@ -96,7 +96,7 @@ As we began exploring the literature and conducting analysis of our data, our re
 
 - (Liu and Subramanian, 2009) Factors Related to Fatal Single-Vehicle Run-Off-Road Crashes
 
-  This report analyzed the FARS data to identify roadway, driver, environmental, and vehicle factors associated with fata single-vehicle crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
+  This report analyzed the FARS data to identify roadway, driver, environmental, and vehicle factors associated with fatal single-vehicle crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
 
 - (Zwerling, et al, 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors
 
