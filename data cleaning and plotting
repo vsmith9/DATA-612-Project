@@ -1,0 +1,483 @@
+---
+title: "progress_report"
+format: pdf
+editor: visual
+---
+
+#Load and inspect the data
+```{r}
+library(tidyverse)
+
+vehicle <- read_csv("data/vehicle.csv")
+person <- read_csv("data/person.csv")
+accident <- read_csv("data/accident.csv")
+vehicle
+person
+accident
+```
+
+
+```{r}
+names(accident)
+```
+```{r}
+accident_small <- accident |>
+  select(
+    ST_CASE,
+    STATE,
+    STATENAME,
+    FATALS,
+    DAY_WEEK,
+    DAY_WEEKNAME,
+    HOUR,
+    HOURNAME,
+    RUR_URB,
+    RUR_URBNAME,
+    LGT_COND,
+    LGT_CONDNAME,
+    WEATHER,
+    WEATHERNAME,
+    FUNC_SYS,
+    FUNC_SYSNAME
+  )
+```
+```{r}
+names(vehicle)
+```
+```{r}
+vehicle_small <- vehicle |>
+  select(
+    ST_CASE,
+    VEH_NO,
+    BODY_TYP,
+    BODY_TYPNAME,
+    VPICBODYCLASS,
+    VPICBODYCLASSNAME,
+    MAKE,
+    MAKENAME,
+    MOD_YEAR,
+    MOD_YEARNAME,
+    TRAV_SP,
+    TRAV_SPNAME,
+    ROLLOVER,
+    ROLLOVERNAME,
+    SPEEDREL,
+    SPEEDRELNAME,
+    DR_DRINK,
+    DR_DRINKNAME,
+    DEATHS
+  )
+```
+```{r}
+names(person)
+```
+```{r}
+person_small <- person |>
+  select(
+    ST_CASE,
+    VEH_NO,
+    PER_NO,
+    PER_TYP,
+    PER_TYPNAME,
+    AGE,
+    AGENAME,
+    SEX,
+    SEXNAME,
+    DRINKING,
+    DRINKINGNAME,
+    ALC_STATUS,
+    ALC_STATUSNAME,
+    INJ_SEV,
+    INJ_SEVNAME
+  )
+```
+```{r}
+glimpse(accident_small)
+glimpse(vehicle_small)
+glimpse(person_small)
+```
+```{r}
+driver_small <- person_small |>
+  filter(PER_TYPNAME == "Driver of a Motor Vehicle In-Transport")
+nrow(driver_small)
+driver_small |>
+  count(PER_TYPNAME)
+```
+```{r}
+#make sure each vehicle only has one driver
+driver_small |>
+  count(ST_CASE, VEH_NO) |>
+  filter(n > 1)
+```
+```{r}
+vehicle_driver <- vehicle_small |>
+  left_join(driver_small,
+            by = c("ST_CASE", "VEH_NO"))
+```
+```{r}
+glimpse(vehicle_driver)
+
+nrow(vehicle_driver)
+```
+
+
+```{r}
+vehicle_driver |>
+  summarise(
+    missing_driver = sum(is.na(PER_NO)),
+    total = n()
+  )
+```
+#Driver information was unavailable for 391 of the 56,011 vehicle records. These records were retained because they may still be used in analyses that do not require driver-level characteristics.
+
+## Research Question 1
+Research Question:
+Do rural fatal crashes involve more fatalities per crash than urban fatal crashes?
+
+### Plot 1: Number of Fatal Crashes by Rural vs Urban
+```{r}
+accident_small |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = RUR_URBNAME)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Number of Fatal Crashes in Rural and Urban Areas",x = "Area Type",y = "Number of Fatal Crashes") +
+  theme_minimal(base_size = 14)
+```
+##Urban areas had more fatal crashes than rural areas in this dataset. This figure provides an overview of where fatal crashes occurred before examining differences in crash severity and other characteristics.
+
+
+
+### Plot 2a: Fatalities per Crash by Rural vs Urban ？？I think this plot is bad
+```{r}
+accident_small |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  group_by(RUR_URBNAME) |>
+  summarise(
+    mean_fatalities = mean(FATALS)
+  ) |>
+  ggplot(aes(x = RUR_URBNAME, y = mean_fatalities)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Average Fatalities per Crash by Area Type",
+    x = "Area Type",
+    y = "Average Fatalities per Crash"
+  ) +
+  theme_minimal(base_size = 14)
+```
+### Plot 2b:Lighting Conditions in Rural vs Urban Areas
+```{r}
+accident_small |>
+  filter(
+    RUR_URBNAME %in% c("Rural", "Urban"),
+    LGT_CONDNAME %in% c(
+      "Daylight",
+      "Dark - Lighted",
+      "Dark - Not Lighted"
+    )
+  ) |>
+  ggplot(
+    aes(
+      x = RUR_URBNAME,
+      fill = LGT_CONDNAME
+    )
+  ) +
+  geom_bar(position = "fill") +
+  labs(
+    title = "Lighting Conditions in Rural and Urban Areas",
+    x = "Area Type",
+    y = "Proportion",
+    fill = "Lighting"
+  ) +
+  theme_minimal(base_size = 14)
+```
+## Daylight was the most common lighting condition in both rural and urban areas. Urban crashes had a larger proportion of crashes occurring in dark but lighted conditions, whereas rural crashes had a relatively higher proportion of crashes occurring in dark and unlighted conditions.
+
+
+## Research Question 2
+Research Question:
+Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+### Create Weekend Variable
+
+The following code creates a new variable that classifies crashes as either occurring on a weekday or a weekend.
+
+```{r}
+accident_weekend <- accident_small |>
+  mutate(
+    weekend = if_else(
+      DAY_WEEKNAME %in% c("Saturday", "Sunday"),
+      "Weekend",
+      "Weekday"))
+```
+```{r}
+accident_weekend |>
+  count(weekend)
+```
+
+### Plot 1: Average Fatal Crashes per Day
+```{r}
+
+accident_weekend |>
+  count(weekend) |>
+  mutate(
+    days = if_else(weekend == "Weekday", 5, 2),
+    crashes_per_day = n / days
+  ) |>
+  ggplot(aes(x = weekend, y = crashes_per_day)) +
+  geom_col(fill = "steelblue") +
+  geom_text(
+    aes(label = round(crashes_per_day, 1)),
+    vjust = -0.5,
+    size = 5
+  ) +
+  labs(
+    title = "Average Fatal Crashes per Day",
+    x = "Day Type",
+    y = "Average Fatal Crashes per Day"
+  ) +
+  scale_y_continuous(
+    limits = c(0, 6500),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  theme_minimal(base_size = 14)
+```
+#To account for the different number of weekdays and weekend days, fatal crashes were standardized as the average number of crashes per day. On average, weekends had more fatal crashes per day than weekdays, suggesting that fatal crashes occurred more frequently on a typical weekend day.
+
+
+### Plot 2a: Distribution of Fatal Crashes by Hour
+
+```{r}
+accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  count(weekend, HOUR) |>
+  ggplot(aes(x = HOUR, y = n, color = weekend)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  labs(
+    title = "Hourly Distribution of Fatal Crashes",
+    x = "Hour of Day",
+    y = "Number of Fatal Crashes",
+    color = "Day Type"
+  ) +
+  theme_minimal(base_size = 14)
+```
+### Plot 2b: Distribution of Fatal Crashes by Hour
+```{r}
+accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  count(weekend, HOUR) |>
+  group_by(weekend) |>
+  mutate(
+    proportion = n / sum(n)
+  ) |>
+  ggplot(aes(
+    x = HOUR,
+    y = proportion,
+    color = weekend
+  )) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  labs(
+    title = "Hourly Distribution of Fatal Crashes",
+    subtitle = "Proportion of crashes within weekdays and weekends",
+    x = "Hour of Day",
+    y = "Proportion of Fatal Crashes",
+    color = "Day Type"
+  ) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(breaks = seq(0, 23, by = 2)) +
+  theme_minimal(base_size = 14)
+```
+## Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
+```{r}
+accident_weekend <- accident_small |>
+  mutate(
+    weekend = if_else(
+      DAY_WEEKNAME %in% c("Saturday", "Sunday"),
+      "Weekend",
+      "Weekday"
+    )
+  )
+```
+```{r}
+vehicle_plot <- vehicle_driver |>
+  left_join(
+    accident_weekend |>
+      select(ST_CASE, weekend),
+    by = "ST_CASE"
+  )
+```
+
+```{r}
+vehicle_plot |>
+  count(BODY_TYPNAME, sort = TRUE)
+```
+```{r}
+vehicle_plot <- vehicle_plot |>
+  mutate(
+    vehicle_type = case_when(
+      BODY_TYPNAME == "4-door sedan, hardtop" ~ "Sedan",
+      BODY_TYPNAME == "Light Pickup" ~ "Pickup",
+      BODY_TYPNAME == 'Compact Utility (Utility Vehicle Categories "Small" and "Midsize")' ~ "Compact SUV",
+      BODY_TYPNAME == 'Large utility (ANSI D16.1 Utility Vehicle Categories and "Full Size" and "Large")' ~ "Large SUV",
+      BODY_TYPNAME == "Two Wheel Motorcycle (excluding motor scooters)" ~ "Motorcycle",
+      BODY_TYPNAME == "Truck-tractor (Cab only, or with any number of trailing unit; any weight)" ~ "Truck Tractor",
+      TRUE ~ BODY_TYPNAME
+    )
+  )
+```
+```{r}
+top_vehicle <- vehicle_plot |>
+  count(vehicle_type, sort = TRUE) |>
+  slice_head(n = 6) |>
+  pull(vehicle_type)
+
+top_vehicle
+```
+```{r}
+### Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
+
+vehicle_plot |>
+  filter(vehicle_type %in% top_vehicle) |>
+  ggplot(
+    aes(
+      x = vehicle_type,
+      fill = weekend
+    )
+  ) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Vehicle Types in Weekday and Weekend Fatal Crashes",
+    x = "Vehicle Type",
+    y = "Number of Vehicles",
+    fill = "Day Type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(
+      angle = 30,
+      hjust = 1
+    )
+  )
+```
+## Sedans and pickup trucks were the most common vehicle types involved in fatal crashes on both weekdays and weekends. The overall distribution of vehicle types was similar across the two groups, although weekdays had a higher number of vehicles involved in fatal crashes.
+
+
+
+## Research Question 3
+Research Question:
+For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+
+## Plot 1: Fatal Crashes During Day and Night
+```{r}
+accident_daynight <- accident_small |>
+  mutate(
+    day_night = if_else(
+      LGT_CONDNAME == "Daylight",
+      "Day",
+      "Night"
+    )
+  )
+```
+```{r}
+
+
+accident_daynight |>
+  ggplot(aes(x = day_night)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Number of Fatal Crashes During Day and Night",
+    x = "Time of Day",
+    y = "Number of Fatal Crashes"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+## Plot 2: Driver Alcohol Involvement by Day and Night
+
+
+```{r}
+driver_daynight <- driver_small |>
+  left_join(
+    accident_daynight |>
+      select(ST_CASE, day_night),
+    by = "ST_CASE"
+  ) |>
+  mutate(
+    alcohol_involvement = case_when(
+      DRINKINGNAME == "Yes (Alcohol Involved)" ~ "Alcohol Involved",
+      DRINKINGNAME == "No (Alcohol Not Involved)" ~ "No Alcohol Involved",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+```{r}
+
+
+driver_daynight |>
+  filter(!is.na(alcohol_involvement)) |>
+  ggplot(
+    aes(
+      x = day_night,
+      fill = alcohol_involvement
+    )
+  ) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Driver Alcohol Involvement During Day and Night",
+    x = "Time of Day",
+    y = "Percentage of Drivers",
+    fill = "Alcohol Involvement"
+  ) +
+  theme_minimal(base_size = 14)
+```
+#The proportion of drivers involved with alcohol was substantially higher at night than during the day. Approximately 29% of nighttime drivers were classified as alcohol involved, compared with about 10% of daytime drivers. This suggests that alcohol involvement may be an important characteristic associated with nighttime fatal crashes.
+
+
+# Plot 3: Driver Age Distribution During Day and Night
+
+```{r}
+### Plot 3: Driver Age Distribution During Day and Night
+
+driver_daynight |>
+  filter(
+    AGE >= 15,
+    AGE <= 100
+  ) |>
+  ggplot(
+    aes(
+      x = day_night,
+      y = AGE,
+      fill = day_night
+    )
+  ) +
+  geom_boxplot(alpha = 0.8) +
+  labs(
+    title = "Driver Age Distribution During Day and Night",
+    x = "Time of Day",
+    y = "Driver Age"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none"
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
