@@ -1,0 +1,475 @@
+---
+title: "ProgressReport#1"
+format:
+  pdf:
+    fontsize: 10pt
+    geometry: margin=0.4in
+---
+
+# Project Title:
+
+Examining Patterns and Predictors of Fatal Vehicle Crashes Across Geographic and Temporal Factors
+
+# Group Members:
+
+- Victoria Smith, DATA-612
+- David Byrd, DATA-612
+- Guanhao Jing, DATA-612
+- Precious Aimufua-Agbontaen, DATA-612
+
+# Project Overview:
+
+This project examines the patterns and predictors of fatal vehicle crashes across the United States using data from the Fatality Analysis Reporting System (FARS). We investigate how crash outcomes vary based on geographic, temporal, vehicle, and driver characteristics. Our analysis incorporates reported crash circumstances, vehicle characteristics, driver and passenger data, geographic, and time variables. These variables include numerical, categorical, geographic, and temporal measures that allow us to explore the predicting factors associated with fatal crashes and identify patterns.
+
+As we began exploring the literature and conducting analysis of our data, our revised research question, corresponding hypotheses, independent and dependent variables, key predictors, and methods can be found below:
+
+```{r}
+#library evyerthing 
+library(tidyverse)
+library(ggplot2)
+
+#reading in the data
+accident <- read_csv("accident.csv")
+vehicle <- read_csv("vehicle.csv")
+person <- read_csv("person.csv")
+```
+
+
+## Research Question #1
+
+- Do rural fatal crashes involve more fatalities per crash than urban fatal crashes, and how are crash, road, and driver characteristics related to this difference?
+
+### Hypotheses
+
+- Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes. Crash, roadway, and driver characteristics are not associated with the number of fatalities per crash.
+- Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes. Crash, roadway, and driver characteristics are associated with the number of fatalities per crash.
+
+### Variables
+
+- Independent: Geographic location (RUR_URB)
+- Dependent: Number of fatalities (FATALS)
+
+### Key Predictors
+
+- RUR_URB, speed limit (VSPD_LIM), weather, lighting (LGT_COND), time of day (HOUR), driver age, alcohol (DRINKING), travel speed (TRAV_SP), rollover, road classification (FUNC_SYS), speed‑related indicator (SPEEDREL).
+
+### Methods
+
+- Two‑sample t-test or similar for mean fatalities rural vs urban
+- Multiple or negative binomial regression with these predictors to model the number of fatalities per fatal crash.
+
+### Prepping data for question 1
+
+```{r}
+## summarize vehicle level data to one observation per crash (ST_CASE)
+## there are a lot of missing travel speed values (over half of observations) which creates an issue
+vehicle_summary <- vehicle |>
+  mutate(
+    TRAV_SP = ifelse(
+      TRAV_SPNAME %in% c(
+        "Not Reported",
+        "Reported as Unknown", 
+        "Stopped Motor Vehicle In-Transport"), 
+      NA, 
+      TRAV_SP
+    ) #replace travel speed codes with NA if their description is not reported, reported as unknown, or stopped motor vehicle in-transport 
+    ) |>
+  group_by(ST_CASE) |>
+  summarise(
+    max_travel_speed = max(TRAV_SP, na.rm = TRUE),
+    any_rollover = any(ROLLOVERNAME == "Rollover"),
+    any_speed_related = any(SPEEDRELNAME %in% c(
+      "Yes, Exceeded Speed Limit",
+      "Yes, Too Fast for Conditions",
+      "Yes, Racing",
+      "Yes, Specifics Unknown")
+    )
+  )
+#This summarizes each ST_CASE with a max travel speed, rollover classification, and speed-related classification. The max travel speed returns a real value or a -inf for those with NA
+
+vehicle_summary <- vehicle_summary |>
+  mutate(
+    max_travel_speed = ifelse(is.infinite(max_travel_speed), NA, max_travel_speed))
+# This replaces the -inf values with NA 
+
+vehicle_summary <- vehicle_summary |>
+  mutate(
+    max_travel_speed = ifelse(max_travel_speed == 997, NA_real_, max_travel_speed))
+# replaces special code 997 (Greater then 151 mph) with NA 
+```
+
+```{r}
+## summarize person level data to one observation per crash (ST_CASE)
+## create variables for youngest and oldest driver in each crash to account for crashes involving multilpe drivers 
+driver_summary <- person |>
+  mutate(
+    # replacing unknown or unreported driver ages with NA
+    AGE = ifelse(AGE >= 998, NA, AGE)
+  ) |>
+  filter(
+    PER_TYPNAME == "Driver of a Motor Vehicle In-Transport") |>
+  group_by(ST_CASE) |>
+  summarise(
+    youngest_driver_age = min(AGE, na.rm = TRUE),
+    oldest_driver_age = max(AGE, na.rm = TRUE),
+    any_drinking = any(DRINKINGNAME == "Yes (Alcohol Involved)", na.rm = TRUE)
+  )
+# instead of filtering out the weird ages I assign NA so we can keep data for the other variables like drinking 
+
+driver_summary <- driver_summary |>
+  mutate(
+    youngest_driver_age = ifelse(is.infinite(youngest_driver_age), NA, youngest_driver_age),
+    oldest_driver_age = ifelse(is.infinite(oldest_driver_age), NA, oldest_driver_age))
+# using the same code from vehicle chunk we have to replace the inf- from summarizing the NAs with a new NA value 
+```
+
+
+```{r}
+## join summarized data from person and vehicle into accident based on ST_CASE
+question1_data <- accident |>
+  select(
+    ST_CASE,
+    RUR_URB,
+    RUR_URBNAME,
+    FATALS,
+    WEATHER,
+    WEATHERNAME,
+    LGT_COND,
+    LGT_CONDNAME,
+    HOUR,
+    FUNC_SYS,
+    FUNC_SYSNAME
+  ) |>
+  left_join(vehicle_summary, by = "ST_CASE") |>
+  left_join(driver_summary, by = "ST_CASE") 
+```
+
+```{r}
+# summary statistics 
+summary(question1_data)
+
+question1_data |>
+  summarise(
+    mean_fatalities = mean(FATALS),
+    sd_fatalities = sd(FATALS),
+    mean_speed = mean(max_travel_speed, na.rm = TRUE),
+    mean_youngest_age = mean(youngest_driver_age, na.rm = TRUE),
+    mean_oldest_age = mean(oldest_driver_age, na.rm = TRUE)
+  )
+```
+
+```{r}
+# some preliminary visualizations
+library(ggplot2)
+
+question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = factor(FATALS), fill = RUR_URBNAME)) +
+  geom_bar(position = "dodge") +
+  labs(
+    x = "Number of Fatalities",
+    y = "Number of Crashes",
+    fill = "Location"
+  )
+
+question1_data |>
+  ggplot(aes(x = max_travel_speed)) +
+  geom_histogram(binwidth = 5) +
+  labs(
+    x = "Maximum Travel Speed (mph)",
+    y = "Number of Crashes"
+  ) 
+
+question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = RUR_URBNAME, y = max_travel_speed)) +
+  geom_boxplot() +
+  labs(
+    x = "Location",
+    y = "Maximum Travel Speed (mph)"
+  )
+
+question1_data |>
+  ggplot(aes(x = max_travel_speed, y = FATALS)) +
+  geom_jitter(alpha = 0.3) +
+  labs(
+    x = "Maximum Travel Speed",
+    y = "Fatalities"
+  ) +
+  scale_x_log10()
+
+question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = WEATHERNAME)) +
+  geom_bar() +
+  coord_flip() +
+  facet_wrap(~ RUR_URBNAME)
+
+question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = LGT_CONDNAME)) +
+  geom_bar() +
+  coord_flip() +
+  facet_wrap(~ RUR_URBNAME)
+
+question1_data |>
+  filter(
+    HOUR < 25, 
+    RUR_URBNAME %in% c("Rural", "Urban")
+    ) |>
+  ggplot(aes(x = HOUR)) +
+  geom_histogram(binwidth = 1) +
+  facet_wrap(~ RUR_URBNAME)
+```
+
+```{r}
+# describing data for the t-test 
+
+question1_ttest <- question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban"))
+
+question1_ttest |>
+  group_by(RUR_URBNAME) |>
+  summarise(
+    n = n(),
+    mean_fatalities = mean(FATALS),
+    sd_fatalities = sd(FATALS)
+  )
+```
+
+```{r}
+# t test
+t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
+# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes 
+```
+
+```{r}
+# negative binomial regression 
+
+library(MASS)
+
+question1_nbr_model <- glm.nb(
+  FATALS ~ 
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  data = question1_data
+)
+
+summary(question1_nbr_model)
+```
+
+```{r}
+# multiple linear regression 
+
+question1_glm_model <- lm(
+  FATALS ~
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  data = question1_data
+)
+
+summary(question1_glm_model)
+
+```
+
+```{r}
+# poisson model 
+
+question1_pois_model <- glm(
+   FATALS ~
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  family = poisson(link = "log"),
+   data = question1_data
+)
+
+summary(question1_pois_model)
+```
+
+## Research Question #2:
+
+- Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+### Hypotheses
+
+- Null hypothesis: Within the set of fatal crashes, the distribution of crashes across weekends and weekdays is the same, and there are no differences in timing or vehicle types between weekend and weekday fatal crashes.
+- Alternative hypothesis: Within the set of fatal crashes, the distribution of crashes differs between weekends and weekdays, and/or timing and vehicle types differ between weekend and weekday fatal crashes.
+
+### Variables
+
+- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+- Dependent variable: Weekend (weekend vs weekday).
+
+### Key Predictors
+
+- HOUR, lighting (LGT_COND), rural/urban (RUR_URB), state, vehicle body type (VPICBODY), speed‑related indicators.
+
+### Methods
+
+- Compare the frequency of fatal crashes that occur on weekends vs weekdays.
+- Logistic regression for weekend vs weekday with crash and vehicle predictors.
+
+## Research Question #3:
+
+- For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+### Hypotheses
+
+- Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
+- Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
+
+### Variables
+
+- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+- Dependent variable A: Weekend (weekend vs weekday).
+- Dependent variable B: Night vs Day (using HOUR and/or LGT_COND to define night/day).
+
+### Key Predictors
+
+- State (STATE), rural/urban (RUR_URB), weather, lighting (LGT_COND), time (HOUR), travel speed (TRAV_SP), speed‑related (SPEEDREL), rollover, driver alcohol (DRINKING), age, sex.
+
+### Methods
+
+- We will fit binary logistic regression models for weekend vs weekday and for night vs day, using variable selection to identify which state, crash, vehicle, and driver characteristics remain in the final models.
+
+# Literature Review:
+
+- (Shrestha and Shrestha, 2017) Factors associated with crash severities in built-up areas along rural highways of Nevada: A case study of 11 towns. Authors found that speeding, nighttime driving, weekday travel, and motorcycle involvement increased likelihood of injury crashes.
+
+- (Liu and Subramanian, 2009) Factors Related to Fatal Single-Vehicle Run-Off-Road Crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
+
+- (Zwerling, et al, 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors. The study concluded that the higher rural fatality rate is associated with greater crash severity and higher injury rate rather than higher frequency of crashes.
+
+- (Ferenchak and Ghodrat Abadi, 2021) Nighttime pedestrian fatalities: A comprehensive examination of infrastructure, user, vehicle, and situational factors. The study found that fatalities increased most on urban arterial roads, non-intersection locations, roads with 40-50 mph speed limits, and crashes involving SUVs.
+
+- (Saha, et.al, 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012. The study found that adverse-weather related fatalities decreased over the period noted above.
+
+# Data
+
+## Data 1
+
+FARS 2024 Accident File: accident.csv
+
+Code below loads the accident file and returns the first few rows of the dataset:
+
+```{r}
+#| message: false
+
+library(readr)
+accident <- read_csv("accident.csv")
+```
+
+– 1. Who are the individuals under study in this data set? That is, what does each row
+
+of your data set correspond to?
+
+Each row in the dataset corresponds to a fatal motor vehicle crash in 2024.
+
+– 2. How many individuals are in your study?
+
+There are 36297 vehicle crashes in this study.
+
+```{r}
+nrow(accident)
+```
+
+–3. Are there repeated measurements on individuals? (Such as measurements taken
+
+over time on the same individual?)
+
+There are no repeated measurements in this dataset since each row corresponds to a unique accident. However, the same accident appears in multiple tables (vehicle.csv, person.csv), which is why we are planning to join them.
+
+- 
+
+  4.  How many total variables are in the data set? Which variables are of interest to
+
+you? How does each variable connect to your specific questions?
+
+There are 80 variables in the dataset. The ones of interest are: ST_CASE: used as the primary key to join other datasets For weekday vs. weekend analysis: DAY_WEEK, DAY_WEEKNAME Night vs day: HOUR, LGT_COND, LGT_CONDNAME Rural vs. Urban setting: RUR_URB, RUR_URBNAME Location Specific: STATE, COUNTY, CITY
+
+```{r}
+ncol(accident)
+```
+
+– 5. What data tidying steps do you anticipate having to do to get a clean data set for
+
+the remaining analyses?
+
+For the accident dataset, we expect to clean the dataset by converting some categorical variables into simpler groups, such as using DAY_WEEK to define weekends vs. weekdays, and using HOUR and LGT_COND to classify variables into night vs. day.
+
+– 6. For some groups, how do you plan to combine from different data sets? You can add options to executable code like this: DATA 2 Person
+
+Extra Data Exploration:
+
+```{r}
+#| results: hide
+
+table(accident$DAY_WEEKNAME)
+```
+Shows number of crashes by day of the week: From the counts, we can see Saturday and Sunday have more crashes than most weekdays.
+
+```{r}
+#| results: hide
+
+table(accident$LGT_CONDNAME)
+```
+Shows number of crashes by light condition (which can potenittaly contribute to night vs. day analysis: From the counts, we can see that daylight crashes are the most common light condition in this dataset.
+
+```{r}
+#| results: hide
+
+table(accident$HOUR)
+```
+Shows number of crashes by hour (time of day): From the counts, we can see there are more crashes during the night (14hrs-2 hrs)
+
+```{r}
+#| results: hide
+
+table(accident$RUR_URBNAME)
+```
+Shows number of crashes by rural vs. urban setting: From the counts, we can see crashes in urban areas are the most common.
+
+## Data 2
+
+FARS 2024 Vehicle and Personnel Files: vehicle.csv, person.csv
+
+# Member's Tasks
+
+– Data preparation: Cleaning and tidying the data - Victoria/ Guanhao
+
+– Statistical Methods: EDA and any statistical analyses - Victoria/ Guanhao
+
+– Producing the group report - Precious/ David
+
+– Producing the group presentation - Precious/ David
+
+– Rehearsing the presentation - All
+
+– A list of who is responsible for submitting which deliverables in Canvas - Precious
