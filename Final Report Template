@@ -1,0 +1,206 @@
+---
+title: "Final Report: Examining Patterns and Predictors of Fatal Vehicle Crashes Across Geographic and Temporal Factors"
+format: 
+  html:
+    df-print: paged
+editor: visual
+---
+
+Group Members
+
+Victoria Smith, DATA-612
+
+David Byrd, DATA-612
+
+Guanhao Jing, DATA-612
+
+Precious Aimufua-Agbontaen, DATA-612
+
+Introduction / Background
+
+(Owner: Precious & David)
+
+This project examines the patterns and predictors of fatal vehicle crashes across the United States using data from the Fatality Analysis Reporting System (FARS). We investigate how crash outcomes vary based on geographic, temporal, vehicle, and driver characteristics.
+
+In our progress report, we identified three research questions motivated by prior literature on rural vs. urban crash severity, weekend/weekday crash patterns, and night-time risk factors. Below, we restate these questions along with the formal analyses we conducted to answer them.
+
+(Precious & David: expand this paragraph with 2-3 sentences summarizing the "story" — why these three questions matter together — and lightly reference the literature review below.)
+
+Research Questions & Hypotheses
+
+Research Question 1
+
+Do rural fatal crashes involve more fatalities per crash than urban fatal crashes, and how are crash, road, and driver characteristics related to this difference?
+
+Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes.
+
+Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes.
+
+Independent variable: Geographic location (RUR_URB)
+
+Dependent variable: Number of fatalities (FATALS)
+
+Key predictors: RUR_URB, VSPD_LIM, weather, LGT_COND, HOUR, driver age, DRINKING, TRAV_SP, rollover, FUNC_SYS, SPEEDREL
+
+Research Question 2
+
+Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+Null hypothesis: There is no difference in the frequency of fatal crashes between weekends and weekdays, nor in timing/vehicle type.
+
+Alternative hypothesis: The frequency of fatal crashes differs between weekends and weekdays, and timing/vehicle type also differ.
+
+Dependent variable: Weekend indicator (weekend vs. weekday)
+
+Key predictors: HOUR, LGT_COND, RUR_URB, STATE, VPICBODY, speed-related indicators
+
+Research Question 3
+
+For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
+
+Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
+
+Dependent variable A: Weekend (weekend vs. weekday)
+
+Dependent variable B: Night vs. day (using HOUR/LGT_COND)
+
+Key predictors: STATE, RUR_URB, weather, LGT_COND, HOUR, TRAV_SP, SPEEDREL, rollover, DRINKING, age, sex
+
+Literature Review
+
+(Carried over from progress report — Precious & David: add a connecting sentence at the end tying these back to the final results/discussion.)
+
+(Shrestha and Shrestha, 2017) Factors associated with crash severities in built-up areas along rural highways of Nevada. Examined over 300 crashes using binary logistic regression; found speeding and nighttime driving were significant factors.
+
+(Liu and Subramanian, 2009) Factors Related to Fatal Single-Vehicle Run-Off-Road Crashes. Used FARS data; found rural roads, speeding, curves, alcohol use, fatigue, and adverse weather were significant factors.
+
+(Zwerling et al., 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors. Found the higher rural fatality rate is associated with greater crash severity rather than higher crash frequency.
+
+(Ferenchak and Ghodrat Abadi, 2021) Nighttime pedestrian fatalities. Found nighttime pedestrian fatalities increased most on urban arterial roads, non-intersection locations, and in crashes involving SUVs.
+
+(Saha et al., 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012. Found weather-related fatalities decreased over the period studied, with state-level variation.
+
+Data Preparation
+
+(Owner: Victoria & Guanhao)
+
+Loading and Merging Data
+
+{r}
+library(readr)
+library(dplyr)
+
+accident <- read_csv("FARS2024NationalCSV/accident.csv")
+vehicle  <- read_csv("FARS2024NationalCSV/vehicle.csv")
+person   <- read_csv("FARS2024NationalCSV/person.csv")
+
+# TODO: join on ST_CASE (and vehicle/person numbers where needed)
+# combined <- accident |> 
+#   left_join(vehicle, by = "ST_CASE") |> 
+#   left_join(person, by = "ST_CASE")
+
+Tidying Steps
+
+(Victoria & Guanhao: document each recode here with a short sentence + code chunk)
+
+Recode DAY_WEEK into a weekend indicator (weekday vs. weekend).
+
+Recode HOUR/LGT_COND into a night_day indicator.
+
+Simplify VPICBODY into broader vehicle-type categories (e.g., motorcycle, passenger car, commercial truck).
+
+Handle missing values in TRAV_SP, DRINKING, etc. (state the approach: exclusion, categorization, or imputation, and why).
+
+{r}
+# TODO: recoding code chunks go here
+
+Exploratory Data Analysis
+
+(Owner: Victoria & Guanhao — one subsection per research question, each with at least one plot/table plus 1-2 sentences of interpretation)
+
+EDA for Research Question 1 (Rural vs. Urban Severity)
+
+{r}
+# TODO: boxplot or summary table of FATALS by RUR_URB
+
+EDA for Research Question 2 (Weekend vs. Weekday)
+
+{r}
+# TODO: bar chart of crash counts by weekend/weekday, faceted by vehicle type
+
+EDA for Research Question 3 (Weekend/Night Characteristics)
+
+{r}
+# TODO: cross-tabulations or plots of weekend/night by key predictors
+
+Statistical Analysis
+
+(Owner: Victoria & Guanhao — for each question: state the model, check assumptions, report test statistic/p-value/CI, and interpret in plain language)
+
+Research Question 1: Rural vs. Urban Fatalities per Crash
+
+Method: Two-sample t-test (or negative binomial regression if the count-based assumptions of the t-test are violated) comparing mean FATALS between rural and urban crashes.
+
+{r}
+# TODO: t.test(FATALS ~ RUR_URB, data = accident)
+# TODO: check assumptions (normality, equal variance) — consider Wilcoxon rank-sum as a backup
+
+Interpretation: (state test statistic, p-value, CI on the mean difference, and whether we reject H0)
+
+Research Question 2: Weekend vs. Weekday Frequency & Vehicle Type
+
+Method: Chi-square test of independence and/or logistic regression predicting weekend occurrence from crash/vehicle characteristics.
+
+{r}
+# TODO: chisq.test() and/or glm(weekend ~ ..., family = binomial)
+
+Interpretation: (state results and tie back to H0/Ha)
+
+Research Question 3: Weekend/Night Characteristics (Multivariable)
+
+Method: Binary logistic regression with stepwise variable selection (AIC/BIC) to identify which predictors are most strongly associated with weekend and night-time occurrence.
+
+{r}
+# TODO: full model + step() for variable selection
+
+Interpretation: (state which predictors remained significant, effect directions, and tie back to H0/Ha)
+
+Results Summary
+
+(Owner: Victoria & Guanhao for numbers, Precious & David for narrative polish)
+
+(Summarize the three sets of results in plain language — 1 short paragraph per question — before moving into discussion.)
+
+Discussion & Conclusion
+
+(Owner: Precious & David, reviewed by Victoria & Guanhao for technical accuracy)
+
+How do the results support or contradict the literature reviewed above?
+
+What real-world implications do the findings have for traffic safety policy or driver behavior?
+
+What are the limitations of this analysis (e.g., FARS only records fatal crashes, potential missing data, model assumptions)?
+
+What would be worth exploring in a follow-up study?
+
+Member Contributions (Final Phase)
+
+(Owner: Precious)
+
+Data preparation (cleaning and tidying): Victoria and Guanhao
+
+Statistical methods (EDA and modeling): Victoria and Guanhao
+
+Report writing: Precious and David
+
+Presentation slides: Precious and David
+
+Presentation rehearsal: All four members
+
+Canvas submission (report, slides, zip file): Precious
+
+References
+
+(Full citations for the 5 literature review sources — add DOIs/links if available)
