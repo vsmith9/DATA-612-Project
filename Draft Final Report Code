@@ -1,0 +1,837 @@
+---
+title: "progress_report"
+format: pdf
+editor: visual
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(ggplot2)
+library(MASS)     
+library(scales)    
+library(tidyr)
+library(tibble)
+
+#Read in the data
+accident <- read_csv("accident.csv")
+vehicle <- read_csv("vehicle.csv")
+person <- read_csv("person.csv")
+```
+
+Create subsets and driver/vehicle joins
+
+```{r}
+# Crash-level subset
+accident_small <- accident |>
+  select(
+    ST_CASE,
+    STATE,
+    STATENAME,
+    FATALS,
+    DAY_WEEK,
+    DAY_WEEKNAME,
+    HOUR,
+    HOURNAME,
+    RUR_URB,
+    RUR_URBNAME,
+    LGT_COND,
+    LGT_CONDNAME,
+    WEATHER,
+    WEATHERNAME,
+    FUNC_SYS,
+    FUNC_SYSNAME
+  )
+```
+
+```{r}
+# Vehicle-level subset
+vehicle_small <- vehicle |>
+  select(
+    ST_CASE,
+    VEH_NO,
+    BODY_TYP,
+    BODY_TYPNAME,
+    VPICBODYCLASS,
+    VPICBODYCLASSNAME,
+    MAKE,
+    MAKENAME,
+    MOD_YEAR,
+    MOD_YEARNAME,
+    TRAV_SP,
+    TRAV_SPNAME,
+    ROLLOVER,
+    ROLLOVERNAME,
+    SPEEDREL,
+    SPEEDRELNAME,
+    DR_DRINK,
+    DR_DRINKNAME,
+    DEATHS
+  )
+```
+
+```{r}
+# Person-level subset
+person_small <- person |>
+  select(
+    ST_CASE,
+    VEH_NO,
+    PER_NO,
+    PER_TYP,
+    PER_TYPNAME,
+    AGE,
+    AGENAME,
+    SEX,
+    SEXNAME,
+    DRINKING,
+    DRINKINGNAME,
+    ALC_STATUS,
+    ALC_STATUSNAME,
+    INJ_SEV,
+    INJ_SEVNAME
+  )
+```
+
+```{r}
+# Inspect
+glimpse(accident_small)
+glimpse(vehicle_small)
+glimpse(person_small)
+```
+
+```{r}
+# Driver-level subset
+driver_small <- person_small |>
+  filter(PER_TYPNAME == "Driver of a Motor Vehicle In-Transport")
+
+nrow(driver_small)
+driver_small |>
+  count(PER_TYPNAME)
+```
+
+```{r}
+#Check one driver per vehicle
+driver_small |>
+  count(ST_CASE, VEH_NO) |>
+  filter(n > 1)
+```
+
+```{r}
+#Join vehicle and driver
+vehicle_driver <- vehicle_small |>
+  left_join(driver_small,
+            by = c("ST_CASE", "VEH_NO"))
+```
+
+```{r}
+glimpse(vehicle_driver)
+
+nrow(vehicle_driver)
+```
+
+```{r}
+vehicle_driver |>
+  summarise(
+    missing_driver = sum(is.na(PER_NO)),
+    total = n()
+  )
+```
+
+#Driver information was unavailable for 391 of the 56,011 vehicle records. These records were retained because they may still be used in analyses that do not require driver-level characteristics.
+
+## Research Question #1
+
+-   Do rural fatal crashes involve more fatalities per crash than urban fatal crashes, and how are crash, road, and driver characteristics related to this difference?
+
+### Hypotheses
+
+-   Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes. Crash, roadway, and driver characteristics are not associated with the number of fatalities per crash.
+-   Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes. Crash, roadway, and driver characteristics are associated with the number of fatalities per crash.
+
+### Variables
+
+-   Independent: Geographic location (RUR_URB)
+-   Dependent: Number of fatalities (FATALS)
+
+### Key Predictors
+
+-   RUR_URB, speed limit (VSPD_LIM), weather, lighting (LGT_COND), time of day (HOUR), driver age, alcohol (DRINKING), travel speed (TRAV_SP), rollover, road classification (FUNC_SYS), speed‑related indicator (SPEEDREL).
+
+### Methods
+
+-   Two‑sample t-test or similar for mean fatalities rural vs urban
+-   Multiple or negative binomial regression with these predictors to model the number of fatalities per fatal crash.
+
+### Prepping data for question 1
+
+```{r}
+## summarize vehicle level data to one observation per crash (ST_CASE)
+## there are a lot of missing travel speed values (over half of observations) which creates an issue
+vehicle_summary <- vehicle |>
+  mutate(
+    TRAV_SP = ifelse(
+      TRAV_SPNAME %in% c(
+        "Not Reported",
+        "Reported as Unknown", 
+        "Stopped Motor Vehicle In-Transport"), 
+      NA, 
+      TRAV_SP
+    ) #replace travel speed codes with NA if their description is not reported, reported as unknown, or stopped motor vehicle in-transport 
+    ) |>
+  group_by(ST_CASE) |>
+  summarise(
+    max_travel_speed = max(TRAV_SP, na.rm = TRUE),
+    any_rollover = any(ROLLOVERNAME == "Rollover"),
+    any_speed_related = any(SPEEDRELNAME %in% c(
+      "Yes, Exceeded Speed Limit",
+      "Yes, Too Fast for Conditions",
+      "Yes, Racing",
+      "Yes, Specifics Unknown")
+    )
+  )
+#This summarizes each ST_CASE with a max travel speed, rollover classification, and speed-related classification. The max travel speed returns a real value or a -inf for those with NA
+```
+
+```{r}
+vehicle_summary <- vehicle_summary |>
+  mutate(
+    max_travel_speed = ifelse(is.infinite(max_travel_speed), NA, max_travel_speed))
+# This replaces the -inf values with NA 
+
+vehicle_summary <- vehicle_summary |>
+  mutate(
+    max_travel_speed = ifelse(max_travel_speed == 997, NA_real_, max_travel_speed))
+# replaces special code 997 (Greater then 151 mph) with NA 
+```
+
+```{r}
+## summarize driver-level data to one observation per crash (ST_CASE)
+## create variables for youngest and oldest driver in each crash to account for crashes involving multiple drivers 
+driver_summary <- person |>
+  mutate(
+    # replacing unknown or unreported driver ages with NA
+    AGE = ifelse(AGE >= 998, NA, AGE)
+  ) |>
+  filter(
+    PER_TYPNAME == "Driver of a Motor Vehicle In-Transport") |>
+  group_by(ST_CASE) |>
+  summarise(
+    youngest_driver_age = min(AGE, na.rm = TRUE),
+    oldest_driver_age = max(AGE, na.rm = TRUE),
+    any_drinking = any(DRINKINGNAME == "Yes (Alcohol Involved)", na.rm = TRUE)
+  )
+# instead of filtering out the weird ages I assign NA so we can keep data for the other variables like drinking 
+ driver_summary <- driver_summary |>
+  mutate(
+    youngest_driver_age = ifelse(is.infinite(youngest_driver_age), NA, youngest_driver_age),
+    oldest_driver_age = ifelse(is.infinite(oldest_driver_age), NA, oldest_driver_age))
+# using the same code from vehicle chunk we have to replace the inf- from summarizing the NAs with a new NA value 
+```
+
+```{r}
+## join summarized data from person and vehicle into accident based on ST_CASE
+question1_data <- accident |>
+  select(
+    ST_CASE,
+    RUR_URB,
+    RUR_URBNAME,
+    FATALS,
+    WEATHER,
+    WEATHERNAME,
+    LGT_COND,
+    LGT_CONDNAME,
+    HOUR,
+    FUNC_SYS,
+    FUNC_SYSNAME
+  ) |>
+  left_join(vehicle_summary, by = "ST_CASE") |>
+  left_join(driver_summary, by = "ST_CASE") 
+```
+
+###Q1 plots and models \### Plot 1: Number of Fatal Crashes by Rural vs Urban
+
+```{r}
+accident_small |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = RUR_URBNAME)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Number of Fatal Crashes in Rural and Urban Areas",x = "Area Type",y = "Number of Fatal Crashes") +
+  theme_minimal(base_size = 14)
+```
+
+##Urban areas had more fatal crashes than rural areas in this dataset. This figure provides an overview of where fatal crashes occurred before examining differences in crash severity and other characteristics.
+
+### Plot 2a: Fatalities per Crash by Rural vs Urban ？？I think this plot is bad
+
+```{r}
+accident_small |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  group_by(RUR_URBNAME) |>
+  summarise(
+    mean_fatalities = mean(FATALS)
+  ) |>
+  ggplot(aes(x = RUR_URBNAME, y = mean_fatalities)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Average Fatalities per Crash by Area Type",
+    x = "Area Type",
+    y = "Average Fatalities per Crash"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+### Plot 2b:Lighting Conditions in Rural vs Urban Areas
+
+```{r}
+accident_small |>
+  filter(
+    RUR_URBNAME %in% c("Rural", "Urban"),
+    LGT_CONDNAME %in% c(
+      "Daylight",
+      "Dark - Lighted",
+      "Dark - Not Lighted"
+    )
+  ) |>
+  ggplot(
+    aes(
+      x = RUR_URBNAME,
+      fill = LGT_CONDNAME
+    )
+  ) +
+  geom_bar(position = "fill") +
+  labs(
+    title = "Lighting Conditions in Rural and Urban Areas",
+    x = "Area Type",
+    y = "Proportion",
+    fill = "Lighting"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+## Daylight was the most common lighting condition in both rural and urban areas. Urban crashes had a larger proportion of crashes occurring in dark but lighted conditions, whereas rural crashes had a relatively higher proportion of crashes occurring in dark and unlighted conditions.
+
+```{r}
+# describing data for the t-test 
+
+question1_ttest <- question1_data |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban"))
+
+question1_ttest |>
+  group_by(RUR_URBNAME) |>
+  summarise(
+    n = n(),
+    mean_fatalities = mean(FATALS),
+    sd_fatalities = sd(FATALS)
+  )
+```
+
+```{r}
+# t test
+t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
+# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes 
+```
+
+```{r}
+# negative binomial regression 
+
+library(MASS)
+
+question1_nbr_model <- glm.nb(
+  FATALS ~ 
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  data = question1_data
+)
+
+summary(question1_nbr_model)
+```
+
+```{r}
+# multiple linear regression 
+
+question1_glm_model <- lm(
+  FATALS ~
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  data = question1_data
+)
+
+summary(question1_glm_model)
+
+```
+
+```{r}
+# poisson model 
+
+question1_pois_model <- glm(
+   FATALS ~
+    RUR_URBNAME + 
+    WEATHERNAME + 
+    LGT_CONDNAME +
+    HOUR +
+    FUNC_SYSNAME +
+    max_travel_speed +
+    youngest_driver_age +
+    oldest_driver_age +
+    any_drinking +
+    any_rollover +
+    any_speed_related,
+  family = poisson(link = "log"),
+   data = question1_data
+)
+
+summary(question1_pois_model)
+```
+
+## Research Question 2
+
+Research Question: Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+### Create Weekend Variable and crash-level data
+
+The following code creates a new variable that classifies crashes as either occurring on a weekday or a weekend.
+
+```{r}
+# Create weekend indicator at accident level
+accident_weekend <- accident_small |>
+  mutate(
+    weekend = if_else(
+      DAY_WEEKNAME %in% c("Saturday", "Sunday"),
+      "Weekend",
+      "Weekday"))
+```
+
+```{r}
+# Counts by weekend/weekday
+accident_weekend |>
+  count(weekend)
+```
+
+### Plot 1: Average Fatal Crashes per Day
+
+```{r}
+
+accident_weekend |>
+  count(weekend) |>
+  mutate(
+    days = if_else(weekend == "Weekday", 5, 2),
+    crashes_per_day = n / days
+  ) |>
+  ggplot(aes(x = weekend, y = crashes_per_day)) +
+  geom_col(fill = "steelblue") +
+  geom_text(
+    aes(label = round(crashes_per_day, 1)),
+    vjust = -0.5,
+    size = 5
+  ) +
+  labs(
+    title = "Average Fatal Crashes per Day",
+    x = "Day Type",
+    y = "Average Fatal Crashes per Day"
+  ) +
+  scale_y_continuous(
+    limits = c(0, 6500),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+#To account for the different number of weekdays and weekend days, fatal crashes were standardized as the average number of crashes per day. On average, weekends had more fatal crashes per day than weekdays, suggesting that fatal crashes occurred more frequently on a typical weekend day.
+
+### Plot 2a: Distribution of Fatal Crashes by Hour
+
+```{r}
+accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  count(weekend, HOUR) |>
+  ggplot(aes(x = HOUR, y = n, color = weekend)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  labs(
+    title = "Hourly Distribution of Fatal Crashes",
+    x = "Hour of Day",
+    y = "Number of Fatal Crashes",
+    color = "Day Type"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+### Plot 2b: Distribution of Fatal Crashes by Hour
+
+```{r}
+accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  count(weekend, HOUR) |>
+  group_by(weekend) |>
+  mutate(
+    proportion = n / sum(n)
+  ) |>
+  ggplot(aes(
+    x = HOUR,
+    y = proportion,
+    color = weekend
+  )) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  labs(
+    title = "Hourly Distribution of Fatal Crashes",
+    subtitle = "Proportion of crashes within weekdays and weekends",
+    x = "Hour of Day",
+    y = "Proportion of Fatal Crashes",
+    color = "Day Type"
+  ) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(breaks = seq(0, 23, by = 2)) +
+  theme_minimal(base_size = 14)
+```
+
+## Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
+
+```{r}
+accident_weekend <- accident_small |>
+  mutate(
+    weekend = if_else(
+      DAY_WEEKNAME %in% c("Saturday", "Sunday"),
+      "Weekend",
+      "Weekday"
+    )
+  )
+```
+
+```{r}
+vehicle_plot <- vehicle_driver |>
+  left_join(
+    accident_weekend |>
+      select(ST_CASE, weekend),
+    by = "ST_CASE"
+  )
+```
+
+```{r}
+vehicle_plot |>
+  count(BODY_TYPNAME, sort = TRUE)
+```
+
+```{r}
+vehicle_plot <- vehicle_plot |>
+  mutate(
+    vehicle_type = case_when(
+      BODY_TYPNAME == "4-door sedan, hardtop" ~ "Sedan",
+      BODY_TYPNAME == "Light Pickup" ~ "Pickup",
+      BODY_TYPNAME == 'Compact Utility (Utility Vehicle Categories "Small" and "Midsize")' ~ "Compact SUV",
+      BODY_TYPNAME == 'Large utility (ANSI D16.1 Utility Vehicle Categories and "Full Size" and "Large")' ~ "Large SUV",
+      BODY_TYPNAME == "Two Wheel Motorcycle (excluding motor scooters)" ~ "Motorcycle",
+      BODY_TYPNAME == "Truck-tractor (Cab only, or with any number of trailing unit; any weight)" ~ "Truck Tractor",
+      TRUE ~ BODY_TYPNAME
+    )
+  )
+```
+
+```{r}
+top_vehicle <- vehicle_plot |>
+  count(vehicle_type, sort = TRUE) |>
+  slice_head(n = 6) |>
+  pull(vehicle_type)
+
+top_vehicle
+```
+
+```{r}
+### Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
+
+vehicle_plot |>
+  filter(vehicle_type %in% top_vehicle) |>
+  ggplot(
+    aes(
+      x = vehicle_type,
+      fill = weekend
+    )
+  ) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Vehicle Types in Weekday and Weekend Fatal Crashes",
+    x = "Vehicle Type",
+    y = "Number of Vehicles",
+    fill = "Day Type"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(
+      angle = 30,
+      hjust = 1
+    )
+  )
+```
+
+## Sedans and pickup trucks were the most common vehicle types involved in fatal crashes on both weekdays and weekends. The overall distribution of vehicle types was similar across the two groups, although weekdays had a higher number of vehicles involved in fatal crashes.
+
+### Test 1: Are fatal crashes more common on weekends than weekdays (per day)?
+
+```{r}
+# Chi-square test: weekend vs weekday counts vs expected 5/7, 2/7
+weekend_counts <- accident_weekend |>
+  count(weekend)
+
+chisq.test(weekend_counts$n, p = c(5/7, 2/7))
+
+```
+
+Interpretation χ² = 281.66, df = 1, p \< 2.2 × 10⁻¹⁶
+
+This tests whether fatal crashes are distributed across weekend/weekday in proportion to the number of days each has (5/7 weekday, 2/7 weekend) — the "no difference in daily rate" null.
+
+With p this small, you reject the null hypothesis: fatal crashes are not occurring at a constant rate per day across the week. Combined with your earlier EDA (weekends showed a higher average number of crashes per day than weekdays), this confirms that gap is statistically real, not just noise from your sample.
+
+Suggested write-up line: "A chi-square goodness-of-fit test comparing observed weekend/weekday fatal crash counts to the expected 2/7–5/7 split by number of days showed a statistically significant difference (χ² = 281.66, df = 1, p \< .001), indicating that fatal crashes occur at a higher rate per day on weekends than on weekdays."
+
+### Test 2: Does vehicle type distribution differ between weekend and weekday crashes?
+
+```{r}
+# Chi-square test: vehicle type distribution by weekend/weekday
+vehicle_weekend_table <- vehicle_plot |>
+  filter(vehicle_type %in% top_vehicle) |>
+  count(weekend, vehicle_type) |>
+  pivot_wider(names_from = vehicle_type, values_from = n, values_fill = 0) |>
+  column_to_rownames("weekend") |>
+  as.matrix()
+
+chisq.test(vehicle_weekend_table)
+
+```
+
+Interpretation χ² = 380.95, df = 5, p \< 2.2 × 10⁻¹⁶
+
+This tests whether vehicle type distribution is independent of weekend vs. weekday (df = 5 because you compared 6 vehicle types across 2 day-type groups: (6-1) × (2-1) = 5).
+
+p this small means you reject the null of independence — the mix of vehicle types involved in fatal crashes genuinely differs between weekends and weekdays, not just by chance.
+
+Suggested write-up line: "A chi-square test of independence between vehicle type and weekend/weekday status was significant (χ² = 380.95, df = 5, p \< .001), indicating that the distribution of vehicle types involved in fatal crashes differs between weekends and weekdays."
+
+### Test 3: Logistic regression — which characteristics predict weekend vs. weekday?
+
+```{r}
+accident_daynight <- accident_small |>
+  mutate(
+    day_night = if_else(
+      LGT_CONDNAME == "Daylight",
+      "Day",
+      "Night"
+    )
+  )
+```
+
+## We classified crashes as “Day” if LGT_CONDNAME was Daylight, and “Night” otherwise (including Dark – Lighted, Dark – Not Lighted, Dawn, and Dusk)
+
+## Research Question 3
+
+Research Question: For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+## Plot 1: Fatal Crashes During Day and Night
+
+```{r}
+# Driver-level data joined with day/night
+accident_daynight <- accident_small |>
+  mutate(
+    day_night = if_else(
+      LGT_CONDNAME == "Daylight",
+      "Day",
+      "Night"
+    )
+  )
+```
+
+```{r}
+
+
+accident_daynight |>
+  ggplot(aes(x = day_night)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Number of Fatal Crashes During Day and Night",
+    x = "Time of Day",
+    y = "Number of Fatal Crashes"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+## Plot 2: Driver Alcohol Involvement by Day and Night
+
+```{r}
+driver_daynight <- driver_small |>
+  left_join(
+    accident_daynight |>
+      select(ST_CASE, day_night),
+    by = "ST_CASE"
+  ) |>
+  mutate(
+    alcohol_involvement = case_when(
+      DRINKINGNAME == "Yes (Alcohol Involved)" ~ "Alcohol Involved",
+      DRINKINGNAME == "No (Alcohol Not Involved)" ~ "No Alcohol Involved",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+```{r}
+
+
+driver_daynight |>
+  filter(!is.na(alcohol_involvement)) |>
+  ggplot(
+    aes(
+      x = day_night,
+      fill = alcohol_involvement
+    )
+  ) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Driver Alcohol Involvement During Day and Night",
+    x = "Time of Day",
+    y = "Percentage of Drivers",
+    fill = "Alcohol Involvement"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+#The proportion of drivers involved with alcohol was substantially higher at night than during the day. Approximately 29% of nighttime drivers were classified as alcohol involved, compared with about 10% of daytime drivers. This suggests that alcohol involvement may be an important characteristic associated with nighttime fatal crashes.
+
+# Plot 3: Driver Age Distribution During Day and Night
+
+```{r}
+### Plot 3: Driver Age Distribution During Day and Night
+
+driver_daynight |>
+  filter(
+    AGE >= 15,
+    AGE <= 100
+  ) |>
+  ggplot(
+    aes(
+      x = day_night,
+      y = AGE,
+      fill = day_night
+    )
+  ) +
+  geom_boxplot(alpha = 0.8) +
+  labs(
+    title = "Driver Age Distribution During Day and Night",
+    x = "Time of Day",
+    y = "Driver Age"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none"
+  )
+```
+
+## Research Question 3: Statistical Analysis (NEW — fill in after RQ3 EDA)
+
+Reuses `vehicle_summary` / `driver_summary` from the RQ1 modeling doc so all three questions draw from the same cleaned predictors (max travel speed, driver age, alcohol, rollover, speed-related).
+
+```{r}
+driver_model_data <- driver_daynight |>
+  filter(
+    !is.na(day_night),
+    AGE >= 15,
+    AGE <= 100
+  ) |>
+  mutate(
+    night_binary = if_else(day_night == "Night", 1L, 0L),
+    night_binary = factor(night_binary, levels = c(0, 1)),
+    alcohol_involved = case_when(
+      DRINKINGNAME == "Yes (Alcohol Involved)" ~ 1L,
+      DRINKINGNAME == "No (Alcohol Not Involved)" ~ 0L,
+      TRUE ~ NA_integer_
+    ),
+    alcohol_involved = factor(alcohol_involved, levels = c(0, 1))
+  ) |>
+  filter(!is.na(alcohol_involved))
+
+accident_model_data <- accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  mutate(
+    weekend_binary = if_else(weekend == "Weekend", 1L, 0L),
+    weekend_binary = factor(weekend_binary, levels = c(0, 1))
+  ) |>
+  # keep all variables you'll use in models/plots
+  select(
+    weekend_binary,
+    HOUR,
+    RUR_URBNAME,
+    STATENAME,
+    LGT_CONDNAME,
+    WEATHERNAME
+  )
+model_night_driver <- glm(
+  night_binary ~ alcohol_involved + AGE + SEXNAME + RUR_URBNAME + STATENAME,
+  data = driver_model_data,
+  family = binomial
+)
+
+summary(model_night_driver)
+```
+
+### Model A: Night vs. day, with stepwise variable selection
+
+```{r}
+accident_model_daynight <- accident_daynight |>
+  left_join(
+    accident_weekend |>
+      select(ST_CASE, weekend),
+    by = "ST_CASE"
+  ) |>
+  mutate(
+    night_binary = if_else(day_night == "Night", 1L, 0L),
+    night_binary = factor(night_binary, levels = c(0, 1)),
+    weekend_binary = if_else(weekend == "Weekend", 1L, 0L),
+    weekend_binary = factor(weekend_binary, levels = c(0, 1))
+  ) |>
+  filter(HOUR >= 0, HOUR <= 23)
+
+model_night_crash <- glm(
+  night_binary ~ weekend_binary + factor(HOUR) + RUR_URBNAME + STATENAME + WEATHERNAME,
+  data = accident_model_daynight,
+  family = binomial
+)
+
+summary(model_night_crash)
+```
+
+### Model B: Weekend vs. weekday, with stepwise variable selection
+
+```{r}
+question3_weekend_full <- glm(
+  weekend ~ RUR_URBNAME + WEATHERNAME + max_travel_speed +
+    youngest_driver_age + oldest_driver_age +
+    any_drinking + any_rollover + any_speed_related,
+  family = binomial,
+  data = question3_data
+)
+
+question3_weekend_step <- step(question3_weekend_full, direction = "both")
+summary(question3_weekend_step)
+exp(cbind(OR = coef(question3_weekend_step), confint(question3_weekend_step)))
+```
+
+**Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
