@@ -390,9 +390,9 @@ question1_ttest |>
 ```
 
 ```{r}
-# t test
+# t test to compare the average number of fatalities per crash between rural and urban crashes. 
 t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
-# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes 
+# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes. 
 ```
 
 ```{r}
