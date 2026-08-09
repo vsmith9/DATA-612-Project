@@ -420,7 +420,7 @@ summary(question1_nbr_model)
 ```
 
 ```{r}
-# multiple linear regression 
+# multiple linear regression used to examine how multiple variables are related to the number of fatalities, assuming a linear relationship. 
 
 question1_glm_model <- lm(
   FATALS ~
@@ -439,6 +439,7 @@ question1_glm_model <- lm(
 )
 
 summary(question1_glm_model)
+# model was statistically significant, confirming that some of the independent variables were significantly related to the number of fatalities. These variables were significant and produced positive coefficients: Maximum travel speed, oldest driver age. These variables were significant and produced negative coefficients: lighting, youngest driver age, and speed related classification. 
 
 ```
 
