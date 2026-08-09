@@ -396,7 +396,7 @@ t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
 ```
 
 ```{r}
-# negative binomial regression 
+# negative binomial regression. Due to fatalities being a count variable, we considered a count-based regression model. Specifically, we used a negative binomial regression to account for the possibility of over dispersion.
 
 question1_nbr_model <- glm.nb(
   FATALS ~ 
@@ -415,6 +415,7 @@ question1_nbr_model <- glm.nb(
 )
 
 summary(question1_nbr_model)
+# Rural vs urban classification was not statistically significant after controlling for the other variables. Maximum travel speed was statistically significant and produced a positive coefficient. Youngest driver age was statistically significant and produced a negative coefficient. Oldest driver age was statistically significant and produced a positive coefficient. 
 ```
 
 ```{r}
