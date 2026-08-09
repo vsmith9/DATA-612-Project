@@ -444,7 +444,7 @@ summary(question1_glm_model)
 ```
 
 ```{r}
-# poisson model 
+# poisson model used to support count data for the dependent variable, similar to the negative binomial model. 
 
 question1_pois_model <- glm(
    FATALS ~
@@ -464,6 +464,7 @@ question1_pois_model <- glm(
 )
 
 summary(question1_pois_model)
+# Similar to the negative binomial regression, there was no statistically significant difference in fatalities between rural and urban crashes. Maximum travel speed was significant with a positive coefficient. Youngest driver age was significant with a negative coefficient. Oldest driver age was significant with a positive coefficient.
 ```
 
 ## Research Question 2
