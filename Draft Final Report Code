@@ -416,6 +416,7 @@ question1_nbr_model <- glm.nb(
 
 summary(question1_nbr_model)
 # Rural vs urban classification was not statistically significant after controlling for the other variables. Maximum travel speed was statistically significant and produced a positive coefficient. Youngest driver age was statistically significant and produced a negative coefficient. Oldest driver age was statistically significant and produced a positive coefficient. 
+# The negative binomial regression should be interpeted with caution. The model dropped 22,697 observations, leaving only 13,600 observations for the analysis. Also the dispersion parameter was very large meaning the data may not have substantial overdispersion. 
 ```
 
 ```{r}
