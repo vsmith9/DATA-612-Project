@@ -1,10 +1,72 @@
 ---
-title: "progress_report"
+title: "Final Report"
 format: pdf
 editor: visual
   markdown: 
     wrap: 72
 ---
+
+title: "Final Report"
+
+# Project Title:
+
+Examining Patterns and Predictors of Fatal Vehicle Crashes Across Geographic and Temporal Factors
+
+# Group Members:
+
+-   Victoria Smith, DATA-612
+-   David Byrd, DATA-612
+-   Guanhao Jing, DATA-612
+-   Precious Aimufua-Agbontaen, DATA-612
+
+# Introduction
+
+## Data Source and Variable Types:
+
+This project examines the patterns and predictors of fatal vehicle crashes across the United States using data from the 2024 Fatality Analysis Reporting System (FARS). FARS is a nationwide database that provides information about fatal motor vehicle traffic crashes in the United States. We investigate how crash outcomes vary based on geographic, temporal, vehicle, and driver characteristics. Our analysis incorporates reported crash circumstances, vehicle characteristics, driver and passenger data, geographic, and time variables. These variables include numerical, categorical, geographic, and temporal measures that allow us to explore the predicting factors associated with fatal crashes and identify patterns.
+
+The "accident" dataset has one row each that represents a single fatal vehicle crash. The "vehicle" dataset contains vehicle-level information, and the "person" dataset contains driver and passenger characteristics. The files are joiined using ST-CASE, which is a unique identfier for each crash.
+
+The numerical variables used include the number of fatalities (FATALS), driver age (AGE), travel speed (TRAV_SP), vehicle model year (MOD_YEAR), and hour of the crash (HOUR). The categorical variables include rural versus urban setting (RUR_URB), lighting condition (LGT_COND), weather condition (WEATHER), road classification (FUNC_SYS), vehicle body type (BODY_TYP), alcohol involvement (DRINKING), rollover status (ROLLOVER), and speed-related status (SPEEDREL). Geographic variables include state, county, and city. Timing variables include day of week, hour of day, and the weekend versus weekday and day versus night variables created for this analysis.
+
+## Reserach Goals and Questions
+
+Goal: Examine patterns and predictors of fatal vehicle crashes across the United States. We explore whether fatal crash outcomes vary based on geographic, timing, vehicle, roadway, and driver characteristics.
+
+Research Question #1: Do rural fatal crashes involve more fatalities per crash than urban fatal crashes, and how are crash, road, and driver characteristics related to this difference?
+
+Research Question #2: Within the set of fatal crashes, are crashes more common on weekends than weekdays, and do the timing and types of vehicles involved differ between weekend and weekday crashes?
+
+Research Question #3: For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+
+## Original Data Collection and Purpose
+The Fatality Analysis Reporting System was created and is maintained by the National Highway Traffic Safety Administration (NHTSA). FARS is a nationwide census that provides yearly data about fatalities that occur in motor vehicle traffic crashes.
+
+The data were originally collected to help identify traffic-safety problems, understand factors related to fatal crashes, support highway-safety programs, and evaluate vehicle and traffic-safety regulations. FARS information is compiled from sources such as police crash reports, driver records, vehicle registration records, death certificates, toxicology reports, emergency medical service reports, and roadway information (https://www.nhtsa.gov/crash-data-systems/fatality-analysis-reporting-system)--Need to add it as a citation.
+
+## Literature Review:
+
+-   (Shrestha and Shrestha, 2017) Factors associated with crash severities in built-up areas along rural highways of Nevada: A case study of 11 towns
+
+    This study examined over 300 crashes in built-up areas along rural highways in Nevada using binary logistic regression to identify factors associated with the crashes. Authors found that speeding, nighttime driving, weekday travel, and motorcycle involvement increased likelihood of injury crashes.
+
+-   (Liu and Subramanian, 2009) Factors Related to Fatal Single-Vehicle Run-Off-Road Crashes
+
+    This report analyzed the FARS data to identify roadway, driver, environmental, and vehicle factors associated with fatal single-vehicle crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
+
+-   (Zwerling, et al, 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors
+
+    This study compared fatal motor vehicle crashes in rural and urban areas. The study concluded that the higher rural fatality rate is associated with greater crash severity and higher injury rate rather than higher frequency of crashes.
+
+-   (Ferenchak and Ghodrat Abadi, 2021) Nighttime pedestrian fatalities: A comprehensive examination of infrastructure, user, vehicle, and situational factors
+
+    This study used FARS data to investigate the increase in nighttime pedestrian fatalities in the US. The study found that fatalities increased most on urban arterial roads, non-intersection locations, roads with 40-50 mph speed limits, and crashes involving SUVs.
+
+-   (Saha, et.al, 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012
+
+    This study used FARS data to explore whether weather and road conditions affected the number of fatal car crashes between 1994 and 2012. The study found that adverse-weather related fatalities decreased over the period noted above. In addition, the number of fatal crashes associated with adverse weather by state differed from the distribution of total fatalities.
+
+As we began exploring the literature and conducting analysis of our data, our revised research question, corresponding hypotheses, independent and dependent variables, key predictors, and methods can be found below:
 
 ```{r}
 # Load libraries
@@ -26,7 +88,7 @@ Create subsets and driver/vehicle joins
 ```{r}
 # Crash-level subset
 accident_small <- accident |>
-  select(
+  dplyr::select(
     ST_CASE,
     STATE,
     STATENAME,
@@ -49,7 +111,7 @@ accident_small <- accident |>
 ```{r}
 # Vehicle-level subset
 vehicle_small <- vehicle |>
-  select(
+  dplyr::select(
     ST_CASE,
     VEH_NO,
     BODY_TYP,
@@ -75,7 +137,7 @@ vehicle_small <- vehicle |>
 ```{r}
 # Person-level subset
 person_small <- person |>
-  select(
+  dplyr::select(
     ST_CASE,
     VEH_NO,
     PER_NO,
@@ -233,7 +295,7 @@ driver_summary <- person |>
 ```{r}
 ## join summarized data from person and vehicle into accident based on ST_CASE
 question1_data <- accident |>
-  select(
+ dplyr::select(
     ST_CASE,
     RUR_URB,
     RUR_URBNAME,
@@ -335,8 +397,6 @@ t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
 
 ```{r}
 # negative binomial regression 
-
-library(MASS)
 
 question1_nbr_model <- glm.nb(
   FATALS ~ 
@@ -522,7 +582,7 @@ accident_weekend <- accident_small |>
 vehicle_plot <- vehicle_driver |>
   left_join(
     accident_weekend |>
-      select(ST_CASE, weekend),
+     dplyr::select(ST_CASE, weekend),
     by = "ST_CASE"
   )
 ```
@@ -596,13 +656,7 @@ chisq.test(weekend_counts$n, p = c(5/7, 2/7))
 
 ```
 
-Interpretation χ² = 281.66, df = 1, p \< 2.2 × 10⁻¹⁶
-
-This tests whether fatal crashes are distributed across weekend/weekday in proportion to the number of days each has (5/7 weekday, 2/7 weekend) — the "no difference in daily rate" null.
-
-With p this small, you reject the null hypothesis: fatal crashes are not occurring at a constant rate per day across the week. Combined with your earlier EDA (weekends showed a higher average number of crashes per day than weekdays), this confirms that gap is statistically real, not just noise from your sample.
-
-Suggested write-up line: "A chi-square goodness-of-fit test comparing observed weekend/weekday fatal crash counts to the expected 2/7–5/7 split by number of days showed a statistically significant difference (χ² = 281.66, df = 1, p \< .001), indicating that fatal crashes occur at a higher rate per day on weekends than on weekdays."
+A chi-squared test was used to look at whether fatal crashes were distributed across weekend/weekday based on the number of days each has (5/7 weekday, 2/7 weekend). The results showed a significant difference (x-squared =281.66, df=1, p\< 0.001), indicating that fatal crashes occur at a higher rate per day on weekends than on weekdays.
 
 ### Test 2: Does vehicle type distribution differ between weekend and weekday crashes?
 
@@ -619,28 +673,36 @@ chisq.test(vehicle_weekend_table)
 
 ```
 
-Interpretation χ² = 380.95, df = 5, p \< 2.2 × 10⁻¹⁶
+A chi-square test looking between vehicle type and weekend/weekday status was significant at the 0.05 p-level, indicating that the distribution of vehicle types involved in fatal crashes differs between weekends and weekdays.
 
-This tests whether vehicle type distribution is independent of weekend vs. weekday (df = 5 because you compared 6 vehicle types across 2 day-type groups: (6-1) × (2-1) = 5).
-
-p this small means you reject the null of independence — the mix of vehicle types involved in fatal crashes genuinely differs between weekends and weekdays, not just by chance.
-
-Suggested write-up line: "A chi-square test of independence between vehicle type and weekend/weekday status was significant (χ² = 380.95, df = 5, p \< .001), indicating that the distribution of vehicle types involved in fatal crashes differs between weekends and weekdays."
-
-### Test 3: Logistic regression — which characteristics predict weekend vs. weekday?
+### Test 3: Logistic regression- Is hour of day associated with a fatal crash occuring on the weekend?
 
 ```{r}
-accident_daynight <- accident_small |>
+# Crash-level dataset for logistic regression: weekend vs weekday
+accident_model_data <- accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
   mutate(
-    day_night = if_else(
-      LGT_CONDNAME == "Daylight",
-      "Day",
-      "Night"
-    )
+    weekend_binary = if_else(weekend == "Weekend", 1L, 0L)
+  ) |>
+  dplyr::select(
+    weekend_binary,
+    HOUR,
+    RUR_URBNAME,
+    LGT_CONDNAME
   )
+
+# Logistic regression model: weekend vs weekday
+model_weekend_hour <- glm(
+  weekend_binary ~ factor(HOUR),
+  data   = accident_model_data,
+  family = binomial
+)
+
+summary(model_weekend_hour)
+
 ```
 
-## We classified crashes as “Day” if LGT_CONDNAME was Daylight, and “Night” otherwise (including Dark – Lighted, Dark – Not Lighted, Dawn, and Dusk)
+A binary logistic regression was used to determine whether the hour in the day,was associated with a fatal crash occurring on a weekend rather than a weekday. Compared with crashes occurring at midnight (which was the reference point), fatal crashes occurring between 1-3 am had higher odds of occurring on weekends. The strongest of those times occurred at 2 am, when fatal crashes had approximately 1.45 times the odds of occurring on a weekend compared with midnight crashes. On the other hand, crashes occurring from the morning through the evening generally had significantly lower odds of occurring on weekends.
 
 ## Research Question 3
 
@@ -693,8 +755,6 @@ driver_daynight <- driver_small |>
 ```
 
 ```{r}
-
-
 driver_daynight |>
   filter(!is.na(alcohol_involvement)) |>
   ggplot(
