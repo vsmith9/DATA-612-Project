@@ -1018,8 +1018,6 @@ summary(question3_weekend_full)
 
 **Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
 
-### Plot 1: Night vs. Day accidents by Alcohol Consumption 
-
 ```{r}
 ### Plot 1: Night vs. Day accidents by Alcohol Consumption
 ggplot(
@@ -1037,3 +1035,37 @@ ggplot(
 theme_minimal()
 
 
+```{r}
+### Plot 2: Night vs. Day accidents by Driver Age
+ggplot(
+  driver_model_data,
+  aes(x = AGE, fill = night_binary)
+) +
+  geom_histogram(
+    binwidth = 5,
+    position = "identity",
+    alpha = 0.5
+  ) +
+  labs(
+    title = "Driver Age Distribution by Crash Time",
+    x = "Driver Age",
+    y = "Number of Drivers",
+    fill = "Crash Time"
+  ) +
+  theme_minimal()
+
+```{r}
+### Plot 3: Night vs. Day accidents by Rural vs. Urban 
+ggplot(
+  driver_model_data,
+  aes(x = RUR_URBNAME, fill = night_binary)
+) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Nighttime vs. Daytime Crashes by Rural/Urban Location",
+    x = "Location",
+    y = "Percentage of Crashes",
+    fill = "Crash Time"
+  ) +
+  theme_minimal()
