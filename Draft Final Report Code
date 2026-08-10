@@ -1,3 +1,11 @@
+---
+title: "Final Report"
+format: pdf
+editor: visual
+  markdown: 
+    wrap: 72
+---
+
 title: "Final Report"
 
 # Project Title:
@@ -61,7 +69,6 @@ The data were originally collected to help identify traffic-safety problems, und
 As we began exploring the literature and conducting analysis of our data, our revised research question, corresponding hypotheses, independent and dependent variables, key predictors, and methods can be found below:
 
 
-
 ```{r}
 # Load libraries
 
@@ -80,7 +87,6 @@ vehicle <- read_csv("FARS2024NationalCSV/vehicle.csv")
 person <- read_csv("FARS2024NationalCSV/person.csv")
 accident <- read_csv("FARS2024NationalCSV/accident.csv")
 ```
-
 
 Create subsets and driver/vehicle joins
 
@@ -322,28 +328,13 @@ accident_small |>
   theme_minimal(base_size = 14)
 ```
 
-##Urban areas had more fatal crashes than rural areas in this dataset. This figure provides an overview of where fatal crashes occurred before examining differences in crash severity and other characteristics.
+# Urban areas had a larger number of fatal crashes than rural areas in this dataset.
+# This figure provides an overview of where fatal crashes occurred before examining
+# differences in crash characteristics and crash severity.
 
-### Plot 2a: Fatalities per Crash by Rural vs Urban ？？I think this plot is bad
 
-```{r}
-accident_small |>
-  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
-  group_by(RUR_URBNAME) |>
-  summarise(
-    mean_fatalities = mean(FATALS)
-  ) |>
-  ggplot(aes(x = RUR_URBNAME, y = mean_fatalities)) +
-  geom_col(fill = "steelblue") +
-  labs(
-    title = "Average Fatalities per Crash by Area Type",
-    x = "Area Type",
-    y = "Average Fatalities per Crash"
-  ) +
-  theme_minimal(base_size = 14)
-```
 
-### Plot 2b:Lighting Conditions in Rural vs Urban Areas
+### Plot 2:Lighting Conditions in Rural vs Urban Areas
 
 ```{r}
 accident_small |>
@@ -371,7 +362,10 @@ accident_small |>
   theme_minimal(base_size = 14)
 ```
 
-## Daylight was the most common lighting condition in both rural and urban areas. Urban crashes had a larger proportion of crashes occurring in dark but lighted conditions, whereas rural crashes had a relatively higher proportion of crashes occurring in dark and unlighted conditions.
+# Daylight was the most common lighting condition in both rural and urban areas.
+# Compared with urban areas, rural fatal crashes had a higher proportion of crashes
+# occurring in dark and unlighted conditions, while urban crashes more frequently
+# occurred in dark but lighted conditions.
 
 ```{r}
 # describing data for the t-test 
@@ -519,27 +513,14 @@ accident_weekend |>
   theme_minimal(base_size = 14)
 ```
 
-#To account for the different number of weekdays and weekend days, fatal crashes were standardized as the average number of crashes per day. On average, weekends had more fatal crashes per day than weekdays, suggesting that fatal crashes occurred more frequently on a typical weekend day.
+# After accounting for the different number of weekdays and weekend days,
+# the average number of fatal crashes per day was higher on weekends than
+# on weekdays. This suggests that fatal crashes occurred more frequently
+# during weekends on a per-day basis.
 
-### Plot 2a: Distribution of Fatal Crashes by Hour
 
-```{r}
-accident_weekend |>
-  filter(HOUR >= 0, HOUR <= 23) |>
-  count(weekend, HOUR) |>
-  ggplot(aes(x = HOUR, y = n, color = weekend)) +
-  geom_line(linewidth = 1) +
-  geom_point() +
-  labs(
-    title = "Hourly Distribution of Fatal Crashes",
-    x = "Hour of Day",
-    y = "Number of Fatal Crashes",
-    color = "Day Type"
-  ) +
-  theme_minimal(base_size = 14)
-```
 
-### Plot 2b: Distribution of Fatal Crashes by Hour
+### Plot 2: Distribution of Fatal Crashes by Hour
 
 ```{r}
 accident_weekend |>
@@ -567,6 +548,13 @@ accident_weekend |>
   scale_x_continuous(breaks = seq(0, 23, by = 2)) +
   theme_minimal(base_size = 14)
 ```
+# The hourly patterns of fatal crashes differed between weekdays and weekends.
+# Weekend crashes were more concentrated during the late-night and early-morning
+# hours, while weekday crashes were relatively more common during daytime and
+# commuting hours. These patterns were examined further using the logistic
+# regression model below.
+
+
 
 ## Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
 
@@ -646,7 +634,10 @@ vehicle_plot |>
   )
 ```
 
-## Sedans and pickup trucks were the most common vehicle types involved in fatal crashes on both weekdays and weekends. The overall distribution of vehicle types was similar across the two groups, although weekdays had a higher number of vehicles involved in fatal crashes.
+# Sedans and pickup trucks were the most common vehicle types involved
+# in fatal crashes on both weekdays and weekends. The overall distribution
+# of vehicle types appeared similar across the two groups and was examined
+# further using a chi-square test below.
 
 ### Test 1: Are fatal crashes more common on weekends than weekdays (per day)?
 
@@ -725,21 +716,9 @@ accident_daynight <- accident_small |>
   )
 ```
 
-```{r}
 
 
-accident_daynight |>
-  ggplot(aes(x = day_night)) +
-  geom_bar(fill = "steelblue") +
-  labs(
-    title = "Number of Fatal Crashes During Day and Night",
-    x = "Time of Day",
-    y = "Number of Fatal Crashes"
-  ) +
-  theme_minimal(base_size = 14)
-```
-
-## Plot 2: Driver Alcohol Involvement by Day and Night
+## Plot 1: Driver Alcohol Involvement by Day and Night
 
 ```{r}
 # Join driver information with crash-level day/night and location information.
@@ -784,9 +763,11 @@ driver_daynight |>
   theme_minimal(base_size = 14)
 ```
 
-#The proportion of drivers involved with alcohol was substantially higher at night than during the day. Approximately 29% of nighttime drivers were classified as alcohol involved, compared with about 10% of daytime drivers. This suggests that alcohol involvement may be an important characteristic associated with nighttime fatal crashes.
+# Alcohol involvement was substantially more common in nighttime fatal crashes
+# than in daytime fatal crashes. In contrast, most daytime fatal crashes did not
+# involve alcohol. This relationship was examined further using a chi-square test.
 
-# Plot 3: Driver Age Distribution During Day and Night
+# Plot 2: Driver Age Distribution During Day and Night
 
 ```{r}
 ### Plot 3: Driver Age Distribution During Day and Night
@@ -814,6 +795,12 @@ driver_daynight |>
     legend.position = "none"
   )
 ```
+# The age distributions of drivers involved in daytime and nighttime fatal crashes
+# were generally similar, although nighttime crashes showed a slightly wider spread
+# of driver ages. Driver age was included as a predictor in the logistic regression
+# model below to evaluate its relationship with crash timing.
+
+
 
 ## Research Question 3: Statistical Analysis (NEW — fill in after RQ3 EDA)
 
@@ -964,5 +951,4 @@ summary(question3_weekend_full)
 ```
 
 **Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
-
 
