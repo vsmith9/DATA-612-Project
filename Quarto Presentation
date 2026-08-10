@@ -1,0 +1,345 @@
+---
+title: "Examining Patterns and Predictors of Fatal Vehicle Crashes"
+subtitle: "FARS 2024 Final Project"
+author: "Victoria Smith | David Byrd | Guanhao Jing | Precious Aimufua-Agbontaen"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: fade
+    center: false
+    execute:
+    echo: false
+    warning: false
+    message: false
+---
+
+```{r}
+#| include: false
+library(tidyverse)
+library(MASS)
+library(scales)
+
+accident <- read_csv("FARS2024NationalCSV/accident.csv")
+vehicle <- read_csv("FARS2024NationalCSV/vehicle.csv")
+person <- read_csv("FARS2024NationalCSV/person.csv")
+
+accident_small <- accident |>
+  dplyr::select(
+    ST_CASE, STATE, STATENAME, FATALS, DAY_WEEK, DAY_WEEKNAME,
+    HOUR, HOURNAME, RUR_URB, RUR_URBNAME, LGT_COND, LGT_CONDNAME,
+    WEATHER, WEATHERNAME, FUNC_SYS, FUNC_SYSNAME
+  )
+
+vehicle_small <- vehicle |>
+  dplyr::select(
+    ST_CASE, VEH_NO, BODY_TYP, BODY_TYPNAME, TRAV_SP, TRAV_SPNAME,
+    ROLLOVER, ROLLOVERNAME, SPEEDREL, SPEEDRELNAME, DR_DRINK,
+    DR_DRINKNAME, DEATHS
+  )
+
+person_small <- person |>
+  dplyr::select(
+    ST_CASE, VEH_NO, PER_NO, PER_TYPNAME, AGE, AGENAME, SEX,
+    SEXNAME, DRINKING, DRINKINGNAME
+  )
+
+driver_small <- person_small |>
+  filter(PER_TYPNAME == "Driver of a Motor Vehicle In-Transport")
+
+vehicle_driver <- vehicle_small |>
+  left_join(driver_small, by = c("ST_CASE", "VEH_NO"))
+
+accident_weekend <- accident_small |>
+  mutate(
+    weekend = if_else(
+      DAY_WEEKNAME %in% c("Saturday", "Sunday"),
+      "Weekend",
+      "Weekday"
+    )
+  )
+
+accident_daynight <- accident_small |>
+  mutate(
+    day_night = if_else(LGT_CONDNAME == "Daylight", "Day", "Night")
+  )
+
+vehicle_plot <- vehicle_driver |>
+  left_join(
+    accident_weekend |> dplyr::select(ST_CASE, weekend),
+    by = "ST_CASE"
+  ) |>
+  mutate(
+    vehicle_type = case_when(
+      BODY_TYPNAME == "4-door sedan, hardtop" ~ "Sedan",
+      BODY_TYPNAME == "Light Pickup" ~ "Pickup",
+      BODY_TYPNAME == 'Compact Utility (Utility Vehicle Categories "Small" and "Midsize")' ~ "Compact SUV",
+      BODY_TYPNAME == 'Large utility (ANSI D16.1 Utility Vehicle Categories and "Full Size" and "Large")' ~ "Large SUV",
+      BODY_TYPNAME == "Two Wheel Motorcycle (excluding motor scooters)" ~ "Motorcycle",
+      BODY_TYPNAME == "Truck-tractor (Cab only, or with any number of trailing unit; any weight)" ~ "Truck Tractor",
+      TRUE ~ BODY_TYPNAME
+    )
+  )
+
+top_vehicle <- vehicle_plot |>
+  count(vehicle_type, sort = TRUE) |>
+  slice_head(n = 6) |>
+  pull(vehicle_type)
+
+driver_daynight <- driver_small |>
+  left_join(
+    accident_daynight |> dplyr::select(ST_CASE, day_night),
+    by = "ST_CASE"
+  ) |>
+  mutate(
+    alcohol_involvement = case_when(
+      DRINKINGNAME == "Yes (Alcohol Involved)" ~ "Alcohol Involved",
+      DRINKINGNAME == "No (Alcohol Not Involved)" ~ "No Alcohol Involved",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+## Project overview
+**Goal**: Examine patterns and predictors of fatal motor vehicle crashes across the United States.
+
+**Data**: 2024 Fatality Analysis Reporting System (FARS), maintained by the National Highway Traffic Safety Administration (NHTSA).
+
+**Files used**: accident-level, vehicle-level, and person-level data.
+
+**Main factors**: geographic setting, time, weather and lighting, vehicle characteristics, and driver characteristics.
+
+## Data and preparation
+::: {.columns}
+::: {.column width="50%"}
+
+**Accident file:** one row per fatal crash
+
+**Vehicle file:** one row per vehicle involved
+
+**Person file:** one row per person involved
+
+Data files were joined using ST_CASE
+:::
+
+::: {.column width="50%"}
+**Variables Created**
+Weekend: Saturday/Sunday vs. Monday-Friday
+
+Day/Night: Daylight vs. all other lighting conditions
+
+- Filtered to drivers for driver-level analyses
+
+- Joined vehicle and driver information for vehicle-level EDA
+:::
+:::
+
+## Research questions
+1. Rural vs. urban: Do rural fatal crashes involve more fatalities per crash than urban crashes?
+
+2. Weekend vs. weekday: Are fatal crashes more common on weekends, and do timing and vehicle types differ?
+
+3. Weekend/night patterns: Which crash, vehicle, driver, and state characteristics are associated with weekend and nighttime fatal crashes?
+
+## Research Question 1
+Do rural fatal crashes involve more fatalities per crash than urban crashes?
+
+**Outcome:** number of fatalities per crash (FATALS)
+
+**Main predictor:** rural/urban location (RUR_URB)
+
+**Additional factors:** lighting, weather, road class, travel speed, rollover, speed-related status, alcohol involvement, and driver age
+
+**Methods:** descriptive plots, two-sample t-test, and count-regression exploration
+
+# <span style="font-size:0.75em;">RQ1: Exploratory Data Analysis</span>
+
+::: {layout-ncol=2}
+
+```{r}
+#| fig-width: 5.5
+#| fig-height: 3.4
+
+accident_small |>
+  filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
+  ggplot(aes(x = RUR_URBNAME)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Fatal Crashes by Area Type",
+    x = "Area Type",
+    y = "Number of Fatal Crashes"
+  ) +
+  theme_minimal(base_size = 11)
+```
+
+```{r}
+#| fig-width: 5.5
+#| fig-height: 3.4
+
+accident_small |>
+  filter(
+    RUR_URBNAME %in% c("Rural", "Urban"),
+    LGT_CONDNAME %in% c(
+      "Daylight",
+      "Dark - Lighted",
+      "Dark - Not Lighted"
+    )
+  ) |>
+  ggplot(aes(x = RUR_URBNAME, fill = LGT_CONDNAME)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Lighting Conditions by Area Type",
+    x = "Area Type",
+    y = "Proportion",
+    fill = "Lighting"
+  ) +
+  theme_minimal(base_size = 11)
+```
+
+:::
+
+::: {.smaller}
+
+- Urban areas had more fatal crashes in raw counts.
+- Daylight was the most common lighting condition in both settings.
+- Rural fatal crashes had a higher proportion of dark, unlighted conditions.
+- Urban fatal crashes had a higher proportion of dark, lighted conditions.
+
+:::
+
+## RQ1: Statistical findings
+The two-sample t-test found that rural crashes had a higher mean number of fatalities per crash than urban crashes.
+
+The estimated rural-minus-urban difference was approximately 0.036 to 0.052 fatalities per crash based on the 95% confidence interval.
+
+In adjusted negative binomial and Poisson models, rural/urban classification was not statistically significant after including other crash, driver, and vehicle factors.
+
+Adjusted count-model results should be interpreted cautiously because missing travel-speed and driver information reduced the analysis sample substantially.
+
+## Research Question 2
+Within fatal crashes, are crashes more common on weekends than weekdays, and do timing and vehicle types differ?
+
+Weekend = Saturday or Sunday; weekday = Monday through Friday
+
+Tests used:
+
+- Chi-square goodness-of-fit test for weekend/weekday crash frequency
+
+- hi-square test of independence for vehicle type by day type
+
+- Logistic regression for hour of day and weekend versus weekday status
+
+# RQ2: Exploratory data analysis
+::: {layout-ncol=3}
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3.2
+accident_weekend |>
+  count(weekend) |>
+  mutate(
+    days = if_else(weekend == "Weekday", 5, 2),
+    crashes_per_day = n / days
+  ) |>
+  ggplot(aes(x = weekend, y = crashes_per_day)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = round(crashes_per_day, 1)), vjust = -0.4, size = 3.5) +
+  labs(title = "Average Fatal Crashes per Day", x = "Day Type", y = "Crashes per Day") +
+  theme_minimal(base_size = 10)
+```
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3.2
+accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  count(weekend, HOUR) |>
+  group_by(weekend) |>
+  mutate(proportion = n / sum(n)) |>
+  ggplot(aes(x = HOUR, y = proportion, color = weekend)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.2) +
+  scale_y_continuous(labels = percent) +
+  scale_x_continuous(breaks = seq(0, 23, 4)) +
+  labs(title = "Hourly Distribution", x = "Hour", y = "Proportion", color = "Day Type") +
+  theme_minimal(base_size = 10)
+```
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3.2
+vehicle_plot |>
+  filter(vehicle_type %in% top_vehicle) |>
+  ggplot(aes(x = vehicle_type, fill = weekend)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Vehicle Types by Day Type", x = "Vehicle Type", y = "Vehicles", fill = "Day Type") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 8))
+```
+
+:::
+
+::: {.smaller}
+
+After accounting for the different number of days, weekends had more fatal crashes per day.
+
+Weekend crashes were more concentrated in late-night and early-morning hours.
+
+Weekday crashes were relatively more common during daytime and commuting hours.
+
+Sedans and pickups were the most common vehicle types in both groups.
+:::
+
+## RQ2: Statistical findings
+Weekend frequency: Fatal crashes were not distributed in proportion to the number of weekday and weekend days.
+
+𝜒
+2
+(
+1
+)
+=
+281.66
+χ 
+2
+ (1)=281.66, 
+𝑝
+<
+.001
+p<.001
+
+Fatal crashes occurred at a higher average rate per day on weekends.
+
+Vehicle types: Vehicle type and weekend/weekday status were significantly associated.
+
+𝜒
+2
+(
+5
+)
+=
+380.95
+χ 
+2
+ (5)=380.95, 
+𝑝
+<
+.001
+p<.001
+
+The mix of vehicles involved in fatal crashes differed between weekends and weekdays.
+
+Timing: Hour of day was associated with whether a fatal crash occurred on a weekend rather than a weekday.
+
+RQ2: Logistic regression interpretation
+The model predicts whether a fatal crash occurred on a weekend rather than a weekday using hour of day.
+
+Midnight was the reference hour; all other hours were compared with midnight.
+
+Crashes between 1 a.m. and 3 a.m. had higher odds of occurring on weekends.
+
+At 2 a.m., fatal crashes had approximately 1.45 times the odds of occurring on a weekend rather than a weekday, compared with midnight crashes.
+
+Crashes during most morning, afternoon, and evening hours had lower odds of occurring on weekends than crashes at midnight.
+
