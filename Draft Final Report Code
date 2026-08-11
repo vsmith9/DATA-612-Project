@@ -1109,6 +1109,13 @@ ggplot(
 ## SUMMARY
 ## Overall Project Summary
 
-This project examined patterns in fatal motor vehicle crashes using 2024 FARS data, focusing on rural and urban differences, lighting conditions, alcohol involvement, time of day, and driver age. Overall, the findings show that fatal crashes vary across location and driver characteristics. Urban areas had more fatal crashes in the dataset, while rural crashes had a higher proportion of crashes occurring in dark and unlighted conditions. Nighttime crashes were more concentrated among younger drivers and were more commonly associated with alcohol involvement, while older drivers were more represented in daytime crashes.
+**Patterns and Predictors:** 
+- **Fatal crash severity:** Rural crashes had more fatalities but was not significant after controlling for other factors. Severity was more closely related to travel speed, driver age and lighting. 
+- **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, althought sedans and pickups dominated both groups.
+- **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states. 
 
-Together, these findings suggest that environmental, behavioral, and driver-related factors all play a role in patterns of fatal crashes. 
+**Conceptual takeaway:** 
+- **crash severity -> higher raw fatalities**
+- **timing -> more crashes/day + late-night concentration**
+- **key drivers: alcohol + speed + driver characteristics**
+**Overall Patterns:** Fatal crash risk refects when, where, and how crashes occur
