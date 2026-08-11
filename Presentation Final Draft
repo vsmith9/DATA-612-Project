@@ -574,11 +574,22 @@ driver_daynight |>
 
 # [RQ3: Statistical Findings]{style="font-size:0.75em;"}
 
--   **Weekend model**
+::: columns
+::: {.column width="50%"}
+**Nighttime Model Significant Predictors:** 
+- alcohol involvement (most positive coef. with a 3.41 odds ratio)
+- driver age (negative coef.)
+- driver sex (male drivers had positive coef.)
+- state (results vary but CA, DE, FL, NV, NM, TX had positive coef.)
+:::
 
--   **Nighttime model**
-
--   **insert here**
+::: {.column width="50%"}
+**Weekend Model Significant Predictors:** 
+- alcohol involvement (most positive coef. with a 1.87 odds ratio)
+- Travel speed (positive coef.)
+- Driver age (positive coef.)
+:::
+:::
 
 # [RQ3: Summary]{style="font-size:0.75em;"}
 - **Alcohol involvement was the strongest predictor of weekend timing**. 
