@@ -914,6 +914,14 @@ model_night_driver <- glm(
 )
 
 summary(model_night_driver)
+# model predicts whether a fatal crash occurred at night 
+# versus during the day using alcohol involvement, driver characteristics, and state variables. 
+
+# alcohol involvement had a very strong association with predicting nighttime crashes (very significant p-value and a  3.41 odds ratio)
+# older driver age was associated with lower odds of nighttime crashes (significant p-value and 0.981 odds ratio). Each additional year of age reduced the odds of nighttime crash by about 1.9%
+# Male drivers were associated with more nighttime crashes (significant p-value and a 1.21 odds ratio). Male drivers had about 21% higher odds of nighttime crash involvement. 
+# Rural and urban classification was not significant. 
+# state level results vary. California, Delaware, Florida, Nevada, New Mexico, and Texas had significant p-values with higher odds of nighttime crashes. (CA had a 1.33 odds ratio)
 ```
 
 ### Model A: Night vs. day, with stepwise variable selection
@@ -967,6 +975,7 @@ model_night_crash <- glm(
 )
 
 summary(model_night_crash)
+# slight issue with model using hour as a predictor of night-time status 
 ```
 
 ### Model B: Weekend vs. weekday, with stepwise variable selection
@@ -1016,6 +1025,12 @@ question3_weekend_full <- glm(
 )
 
 summary(question3_weekend_full)
+# used a linear regression model to predict whether a crash was on the weekend or weekday using various crash characteristics. 
+# Travel speed, driver age, and alcohol involvement were significant predictors of weekend classification. 
+# travel speed (higher -> weekend)
+# youngest driver age (older -> weekend)
+# oldest driver age (older -> weekday)
+# alcohol (higher -> weekend ) (1.87 odds ratio)
 ```
 
 **Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
