@@ -1097,7 +1097,7 @@ ggplot(
   theme_minimal()
 
 #This graph shows us that there is a higher concentration of urban crashes occurring in the nighttime versus rural crashes occurring in the daytime. The graph segregates these crashes based on those reported as rural and urban. We can see that approximately 25% of rural crashes occur in the daytime versus approximately 45% of urban crashes occurring at nighttime. 
-
+```
 
 ## Research Question 3 Summary
 Overall, our findings suggest that the characteristics of fatal crashes differ based on when and where crashes occur. Nighttime crashes were more concentrated among younger drivers and were more associated with alcohol consumption and urban driving. While, daytime crashes had a greater concentration of older drivers in rural communities. 
