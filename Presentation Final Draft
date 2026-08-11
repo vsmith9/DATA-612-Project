@@ -301,8 +301,7 @@ fatalities per crash, but rural/urban classification was not significant
 **Key Predictors:** Travel speed, driver age, lighting, and
 speed-related factors showed significant relationships with fatalities
 
-**Interpretation:** Crash severity appears to be driven by a combination
-of select driver/weather conditions rather than strictly location
+**Interpretation:** Reject the null hypothesis based on the t-test. But, after controlling for other factors, we fail to reject the null for rural/urban location itself
 :::
 
 # [Research Question 2]{style="font-size:0.75em;"}
@@ -449,6 +448,9 @@ were more concentrated during late-night and early-morning hours.
 
 # [RQ2: Summary]{style="font-size:0.75em;"}
 
+Overall, our findings support the alternative hypothesis that fatal-crash frequency, timing, and vehicle characteristics differ between weekends and weekdays. Fatal crashes occurred at a significantly higher rate per day on weekends than on weekdays, and weekend crashes were more concentrated during late-night and early-morning hours. Sedans and pickup trucks were the most common vehicle types in both groups; however, the chi-square test indicated that the overall distribution of vehicle types differed significantly by weekend versus weekday status.
+
+
 # [Research Question 3]{style="font-size:0.75em;"}
 
 Which crash, vehicle, driver, and state characteristics are associated
@@ -576,22 +578,32 @@ driver_daynight |>
 
 ::: columns
 ::: {.column width="50%"}
-**Nighttime Model Significant Predictors:** 
+**Night-time Model Significant Predictors:** 
+<div style="font-size: 35px;">
 - alcohol involvement (most positive coef. with a 3.41 odds ratio)
+
 - driver age (negative coef.)
+
 - driver sex (male drivers had positive coef.)
+
 - state (results vary but CA, DE, FL, NV, NM, TX had positive coef.)
+</div>
 :::
 
 ::: {.column width="50%"}
 **Weekend Model Significant Predictors:** 
+<div style="font-size: 35px;">
 - alcohol involvement (most positive coef. with a 1.87 odds ratio)
-- Travel speed (positive coef.)
-- Driver age (positive coef.)
+
+- travel speed (positive coef.)
+
+- driver age (positive coef.)
+</div>
 :::
 :::
 
 # [RQ3: Summary]{style="font-size:0.75em;"}
+<div style="font-size: 25px;">
 - **Alcohol involvement was the strongest predictor of weekend timing**. 
 
 - **Driver characteristics mattered:** older drivers were less likely to be involved in nighttime crashes, while male drivers had higher odds of nighttime involvement
@@ -600,20 +612,32 @@ driver_daynight |>
 
 - **Rural/urban classification was not significant**, while nighttime crash patterns varied significantly across states.
 
+- **Interpretation:** For the night-time model, we reject the null hypothesis; there is evidence that crash/driver/state characteristics are associated with fatal crash night classification. For the weekend model, we reject the null hypothesis: there is evidence that certain characteristics are associated with fatal crash weekend classification. 
+</div>
+
 # [Project Conclusion]{style="font-size:0.75em;"}
 ::: columns
-::: {.column width="50%"}
+::: {.column width="65%"}
 **Patterns and Predictors:** 
+<div style="font-size: 25px;">
+
 - **Fatal crash severity:** Rural crashes had more fatalities but was not significant after controlling for other factors. Severity was more closely related to travel speed, driver age and lighting. 
-- **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, althought sedans and pickups dominated both groups.
-- **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states. 
+- **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, although sedans and pickups dominated both groups.
+
+- **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states.
+</div>
 :::
 
-::: {.column width="50%"}
-**Conceptual takeways:** 
-- **crash severity -> higher raw fatalities**
-- **timing -> more crashes/day + late-night concentration**
+::: {.column width="35%"}
+**Conceptual takeaways:** 
+<div style="font-size: 25px;">
+- **crash severity -> rural had higher raw fatalities**
+
+- **timing -> more crashes/day on weekends + late-night concentration**
+
 - **key drivers: alcohol + speed + driver characteristics**
-**Overall Patterns:** Fatal crash risk refects when, where, and how crashes occur
+
+**Overall Patterns:** Fatal crash risk reflects when, where, and how crashes occur
+</div>
 :::
 :::
