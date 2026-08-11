@@ -101,6 +101,45 @@ driver_daynight <- driver_small |>
       TRUE ~ NA_character_
     )
   )
+
+# RQ2 statistical tests and logistic regression
+
+weekend_counts <- accident_weekend |>
+  count(weekend) |>
+  arrange(match(weekend, c("Weekday", "Weekend")))
+
+weekend_chi <- chisq.test(
+  weekend_counts$n,
+  p = c(5/7, 2/7)
+)
+
+vehicle_weekend_table <- vehicle_plot |>
+  filter(vehicle_type %in% top_vehicle) |>
+  count(weekend, vehicle_type) |>
+  pivot_wider(
+    names_from = vehicle_type,
+    values_from = n,
+    values_fill = 0
+  ) |>
+  column_to_rownames("weekend") |>
+  as.matrix()
+
+vehicle_chi <- chisq.test(vehicle_weekend_table)
+
+accident_model_data <- accident_weekend |>
+  filter(HOUR >= 0, HOUR <= 23) |>
+  mutate(
+    weekend_binary = if_else(weekend == "Weekend", 1L, 0L)
+  )
+
+model_weekend_hour <- glm(
+  weekend_binary ~ factor(HOUR),
+  data = accident_model_data,
+  family = binomial
+)
+
+# Extract odds ratio for 2 a.m. compared with midnight
+hour_2am_or <- exp(coef(model_weekend_hour)["factor(HOUR)2"])
 ```
 
 ## Project overview
@@ -118,7 +157,7 @@ vehicle characteristics, and driver characteristics.
 
 ## Data and preparation
 
-::::: columns
+::: columns
 ::: {.column width="45%"}
 **Accident file:** one row per fatal crash
 
@@ -141,7 +180,7 @@ involvement
 
 **Vehicle classification:** sedan or SUV
 :::
-:::::
+:::
 
 ## Research questions
 
@@ -224,16 +263,16 @@ accident_small |>
 ```
 :::
 
-:::: smaller
+::: smaller
 ::: {style="font-size: 25px;"}
-- Urban areas had more fatal crashes in raw counts.
-- Daylight was the most common lighting condition in both settings.
-- Rural fatal crashes had a higher proportion of dark, unlighted
-  conditions.
-- Urban fatal crashes had a higher proportion of dark, lighted
-  conditions.
+-   Urban areas had more fatal crashes in raw counts.
+-   Daylight was the most common lighting condition in both settings.
+-   Rural fatal crashes had a higher proportion of dark, unlighted
+    conditions.
+-   Urban fatal crashes had a higher proportion of dark, lighted
+    conditions.
 :::
-::::
+:::
 
 # [RQ1: Statistical Findings]{style="font-size:0.75em;"}
 
@@ -250,15 +289,21 @@ like **maximum travel speed**, **oldest/youngest driver age**,
 significant explanatory power in the models
 
 # [RQ1: Summary]{style="font-size:0.75em;"}
-<div style="font-size: 35px;">
-**EDA:** Rural fatal crashes had a greater share of dark, unlighted conditions, while urban crashes were more common overall and more frequently occurred under lighted nighttime conditions 
 
-**Statistical Evidence:** Rural crashes had a higher average number of fatalities per crash, but rural/urban classification was not significant 
+::: {style="font-size: 35px;"}
+**EDA:** Rural fatal crashes had a greater share of dark, unlighted
+conditions, while urban crashes were more common overall and more
+frequently occurred under lighted nighttime conditions
 
-**Key Predictors:** Travel speed, driver age, lighting, and speed-related factors showed significant relationships with fatalities 
+**Statistical Evidence:** Rural crashes had a higher average number of
+fatalities per crash, but rural/urban classification was not significant
 
-**Interpretation:** Crash severity appears to be driven by a combination of select driver/weather conditions rather than strictly location 
-</div>
+**Key Predictors:** Travel speed, driver age, lighting, and
+speed-related factors showed significant relationships with fatalities
+
+**Interpretation:** Crash severity appears to be driven by a combination
+of select driver/weather conditions rather than strictly location
+:::
 
 # [Research Question 2]{style="font-size:0.75em;"}
 
@@ -339,40 +384,75 @@ vehicle_plot |>
 ```
 :::
 
-:::: smaller
+::: smaller
 ::: {style="font-size: 20px;"}
-- After accounting for the different number of days, weekends had more
-  fatal crashes per day.
+-   After accounting for the different number of days, weekends had more
+    fatal crashes per day.
 
-- Weekend crashes were more concentrated in late-night and early-morning
-  hours.
+-   Weekend crashes were more concentrated in late-night and
+    early-morning hours.
 
-- Weekday crashes were relatively more common during daytime and
-  commuting hours.
+-   Weekday crashes were relatively more common during daytime and
+    commuting hours.
 
-- Sedans and pickups were the most common vehicle types in both groups.
+-   Sedans and pickups were the most common vehicle types in both
+    groups.
 :::
-::::
+:::
 
 # [RQ2: Statistical Findings]{style="font-size:0.75em;"}
 
-- **Fatal crashes occurred at a significantly higher
-  average rate per day on weekends** than weekdays
+```{r}
+#| echo: false
+#| results: asis
 
-- **Vehicle type was significantly associated with weekend
-  vs. weekday crashes**, indicating the vehicle mix differed between the
-  two
+rq2_results <- tibble(
+  Analysis = c(
+    "Weekend vs. weekday crash rate",
+    "Vehicle type by day type",
+    "Hour of day and weekend status"
+  ),
+  `Key result` = c(
+    paste0(
+      "&chi;<sup>2</sup>(1) = ",
+      round(unname(weekend_chi$statistic), 2),
+      ", <i>p</i> &lt; .001"
+    ),
+    paste0(
+      "&chi;<sup>2</sup>(5) = ",
+      round(unname(vehicle_chi$statistic), 2),
+      ", <i>p</i> &lt; .001"
+    ),
+    paste0(
+      "2 a.m. odds ratio = ",
+      round(hour_2am_or, 2)
+    )
+  ),
+  Interpretation = c(
+    "Fatal crashes occurred at a significantly higher rate per day on weekends.",
+    "The distribution of vehicle types differed significantly between weekend and weekday crashes.",
+    "At 2 a.m., fatal crashes had higher odds of occurring on weekends than at midnight."
+  )
+)
 
-- Hour of day significantly predicted weekend vs. weekday
-  status. **Early-morning crashes (1–3 a.m.) were more likely to occur
-  on weekends, while most daytime and evening hours had lower odds
-  compared with midnight**.
+knitr::kable(
+  rq2_results,
+  format = "html",
+  escape = FALSE,
+  align = c("l", "c", "l"),
+  table.attr = 'style="font-size: 22px; width: 100%;"'
+)
+```
+
+**Takeaway:** Weekend fatal crashes occurred more frequently per day and
+were more concentrated during late-night and early-morning hours.
 
 # [RQ2: Summary]{style="font-size:0.75em;"}
 
 # [Research Question 3]{style="font-size:0.75em;"}
 
-Which crash, vehicle, driver, and state characteristics are associated with weekend and nighttime fatal crashes?
+Which crash, vehicle, driver, and state characteristics are associated
+with weekend and nighttime fatal crashes?
 
 **Main predictor:** crash timing, rural/urban location, state, and
 weather
@@ -482,19 +562,23 @@ driver_daynight |>
 ```
 :::
 
-:::: smaller
+::: smaller
 ::: {style="font-size: 20px;"}
-- Alcohol involvement was substantially higher in nighttime fatal
-  crashes, while most daytime crashes did not involve alcohol
-- Driver ages were generally similar between day and night crashes,
-  although nighttime crashes showed slightly greater variation; age was
-  included in the logistic regression
+-   Alcohol involvement was substantially higher in nighttime fatal
+    crashes, while most daytime crashes did not involve alcohol
+-   Driver ages were generally similar between day and night crashes,
+    although nighttime crashes showed slightly greater variation; age
+    was included in the logistic regression
 :::
-::::
+:::
 
 # [RQ3: Statistical Findings]{style="font-size:0.75em;"}
 
-- The results find that the time of day is more strongly associated with alcohol involvement than the driver age. In this dataset, alcohol involvement appears to be more of an important characteristic of nighttime fatal crashes, while differences in driver age between day and night were relatively modest. 
+-   **insert here**
+
+-   **insert here**
+
+-   **insert here**
 
 # [RQ3: Summary]{style="font-size:0.75em;"}
 
