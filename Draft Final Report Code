@@ -1034,9 +1034,14 @@ ggplot(
 ) + 
 theme_minimal()
 
+#Alcohol consumption is more common in nighttime fatal crashes (~70%) than in daytime crashes (~26%). 
 
 ```{r}
 ### Plot 2: Night vs. Day accidents by Driver Age
+
+driver_model_data_age <- driver_model_data |>
+  filter(AGE != 999, !is.na(AGE))
+
 ggplot(
   driver_model_data,
   aes(x = AGE, fill = night_binary)
@@ -1054,8 +1059,12 @@ ggplot(
   ) +
   theme_minimal()
 
+#The graph shows us that younger drivers are more likely to be involved in nighttime crashes, while older adults are more likely to have daytime crashes. While the concentration of nighttime crashes versus daytime crashes is greater among younger drivers, we know that this graph shows the distribution of drivers involved in fatal crashes rather than the likelihood of a crash occurring at a particular age. 
+
 ```{r}
+
 ### Plot 3: Night vs. Day accidents by Rural vs. Urban 
+
 ggplot(
   driver_model_data,
   aes(x = RUR_URBNAME, fill = night_binary)
@@ -1069,3 +1078,17 @@ ggplot(
     fill = "Crash Time"
   ) +
   theme_minimal()
+
+#This graph shows us that there is a higher concentration of urban crashes occurring in the nighttime versus rural crashes occurring in the daytime. The graph segregates these crashes based on those reported as rural and urban. We can see that approximately 25% of rural crashes occur in the daytime versus approximately 45% of urban crashes occurring at nighttime. 
+
+
+## Research Question 3 Summary
+Overall, our findings suggest that the characteristics of fatal crashes differ based on when and where crashes occur. Nighttime crashes were more concentrated among younger drivers and were more associated with alcohol consumption and urban driving. While, daytime crashes had a greater concentration of older drivers in rural communities. 
+
+
+## SUMMARY
+## Overall Project Summary
+
+This project examined patterns in fatal motor vehicle crashes using 2024 FARS data, focusing on rural and urban differences, lighting conditions, alcohol involvement, time of day, and driver age. Overall, the findings show that fatal crashes vary across location and driver characteristics. Urban areas had more fatal crashes in the dataset, while rural crashes had a higher proportion of crashes occurring in dark and unlighted conditions. Nighttime crashes were more concentrated among younger drivers and were more commonly associated with alcohol involvement, while older drivers were more represented in daytime crashes.
+
+Together, these findings suggest that environmental, behavioral, and driver-related factors all play a role in patterns of fatal crashes. 
