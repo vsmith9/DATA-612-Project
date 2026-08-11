@@ -1077,7 +1077,7 @@ ggplot(
   theme_minimal()
 
 #The graph shows us that younger drivers are more likely to be involved in nighttime crashes, while older adults are more likely to have daytime crashes. While the concentration of nighttime crashes versus daytime crashes is greater among younger drivers, we know that this graph shows the distribution of drivers involved in fatal crashes rather than the likelihood of a crash occurring at a particular age. 
-
+```
 ```{r}
 
 ### Plot 3: Night vs. Day accidents by Rural vs. Urban 
