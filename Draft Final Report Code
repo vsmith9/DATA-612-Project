@@ -1100,7 +1100,10 @@ ggplot(
 ```
 
 ## Research Question 3 Summary
-Overall, our findings suggest that the characteristics of fatal crashes differ based on when and where crashes occur. Nighttime crashes were more concentrated among younger drivers and were more associated with alcohol consumption and urban driving. While, daytime crashes had a greater concentration of older drivers in rural communities. 
+- Alcohol involvement was the strongest predictor of weekend timing. 
+- Driver characteristics mattered: older drivers were less likely to be involved in nighttime crashes, while male drivers had higher odds of nighttime involvement
+- Weekend crashes were associated with higher travel speeds and older driver age
+- Rural/urban classification was not significant, while nighttime crash patterns varied significantly across states.
 
 
 ## SUMMARY
