@@ -72,7 +72,7 @@ The data were originally collected to help identify traffic-safety problems, und
 
     This report analyzed the FARS data to identify roadway, driver, environmental, and vehicle factors associated with fatal single-vehicle crashes. Study concluded that rural roads, speeding, curves, alcohol use, driver fatigue, adverse weather, and high-speed roadways were all significant factors.
 
--   (Zwerling, et al, 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors
+-   (Zwerling et al., 2005) Fatal motor vehicle crashes in rural and urban areas: decomposing rates into contributing factors
 
     This study compared fatal motor vehicle crashes in rural and urban areas. The study concluded that the higher rural fatality rate is associated with greater crash severity and higher injury rate rather than higher frequency of crashes.
 
@@ -80,7 +80,7 @@ The data were originally collected to help identify traffic-safety problems, und
 
     This study used FARS data to investigate the increase in nighttime pedestrian fatalities in the US. The study found that fatalities increased most on urban arterial roads, non-intersection locations, roads with 40-50 mph speed limits, and crashes involving SUVs.
 
--   (Saha, et.al, 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012
+-   (Saha et al., 2016) Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994-2012
 
     This study used FARS data to explore whether weather and road conditions affected the number of fatal car crashes between 1994 and 2012. The study found that adverse-weather related fatalities decreased over the period noted above. In addition, the number of fatal crashes associated with adverse weather by state differed from the distribution of total fatalities.
 
@@ -1140,6 +1140,16 @@ Overall, fatal crash risk reflects when, where, and how crashes occur. Rural cra
 References:
 
 *Fatality analysis reporting system*. NHTSA. (2024). https://www.nhtsa.gov/crash-data-systems/fatality-analysis-reporting-system
+
+Ferenchak, N. N., & Ghodrat Abadi, M. (2021). Nighttime pedestrian fatalities: A comprehensive examination of infrastructure, user, vehicle, and situational factors. Journal of Safety Research, 79, 14–25. https://doi.org/10.1016/j.jsr.2021.07.002
+
+Liu, C., & Subramanian, R. (2009). Factors related to fatal single-vehicle run-off-road crashes (DOT HS 811 232). National Highway Traffic Safety Administration, National Center for Statistics and Analysis.
+
+Saha, S., Schramm, P., Nolan, A., & Hess, J. (2016). Adverse weather conditions and fatal motor vehicle crashes in the United States, 1994–2012. Environmental Health, 15, 104. https://doi.org/10.1186/s12940-016-0189-x
+
+Shrestha, P. P., & Shrestha, K. J. (2017). Factors associated with crash severities in built-up areas along rural highways of Nevada: A case study of 11 towns. Journal of Traffic and Transportation Engineering (English Edition), 4(1), 96–102. https://doi.org/10.1016/j.jtte.2016.08.003
+
+Zwerling, C., Peek-Asa, C., Whitten, P. S., Choi, S.-W., Sprince, N. L., & Jones, M. P. (2005). Fatal motor vehicle crashes in rural and urban areas: Decomposing rates into contributing factors. Injury Prevention, 11(1), 24–28. https://doi.org/10.1136/ip.2004.005959
 
 Data:
 
