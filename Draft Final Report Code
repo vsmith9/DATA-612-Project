@@ -1122,7 +1122,7 @@ summary(question3_weekend_full)
 -   Used a linear regression model to predict whether a crash was on the weekend or weekday using various crash characteristics.
 -   Travel speed, driver age, and alcohol involvement were significant predictors of weekend classification.
 
-**Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
+**Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard glm
 
 ## Research Question 3 Summary
 
