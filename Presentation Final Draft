@@ -4,6 +4,7 @@ subtitle: "FARS 2024 Final Project"
 author: "Victoria Smith | David Byrd | Guanhao Jing | Precious Aimufua-Agbontaen"
 format:
   revealjs:
+    output-file: "Final Presentation.html"
     theme: simple
     slide-number: true
     transition: fade
@@ -16,7 +17,9 @@ editor:
   markdown: 
     wrap: 72
 ---
-
+<!--
+Contributor: Guanhao
+-->
 ```{r}
 #| include: false
 library(tidyverse)
@@ -142,6 +145,9 @@ model_weekend_hour <- glm(
 hour_2am_or <- exp(coef(model_weekend_hour)["factor(HOUR)2"])
 ```
 
+<!--
+Contributor: Victoria
+-->
 ## Project overview
 
 **Goal**: Examine patterns and predictors of fatal motor vehicle crashes
@@ -181,7 +187,9 @@ involvement
 **Vehicle classification:** sedan or SUV
 :::
 :::
-
+<!--
+Contributor: Precious
+-->
 ## Research questions
 
 1.  Rural vs. urban: Do rural fatal crashes involve more fatalities per
@@ -193,7 +201,9 @@ involvement
 3.  Weekend/night patterns: Which crash, vehicle, driver, and state
     characteristics are associated with weekend and nighttime fatal
     crashes?
-
+<!--
+Contributor: David
+-->
 # [Research Question 1]{style="font-size:0.75em;"}
 
 ::: {style="font-size: 24px;"}
@@ -221,7 +231,9 @@ rollover, speed-related status, alcohol involvement, and driver age
 **Methods:** Descriptive plots, two-sample t-test, and count-regression
 exploration
 :::
-
+<!--
+Contributor: Guanhao
+-->
 # [RQ1: Exploratory Data Analysis]{style="font-size:0.75em;"}
 
 ::: {layout-ncol="2"}
@@ -286,7 +298,9 @@ accident_small |>
     conditions.
 :::
 :::
-
+<!--
+Contributor: David
+-->
 # [RQ1: Statistical Findings]{style="font-size:0.75em;"}
 
 The two-sample t-test found that **rural crashes had a higher mean
@@ -318,7 +332,9 @@ speed-related factors showed significant relationships with fatalities
 after controlling for other factors, we fail to reject the null for
 rural/urban location itself
 :::
-
+<!--
+Contributor: Victoria
+-->
 # [Research Question 2]{style="font-size:0.75em;"}
 
 ::: {style="font-size: 24px;"}
@@ -343,7 +359,9 @@ type
 **Methods:** descriptive plots, chi-square goodness-of-fit test,
 chi-square test of independence, and logistic regression
 :::
-
+<!--
+Contributor: Guanhao
+-->
 # [RQ2: Exploratory Data Analysis]{style="font-size:0.75em;"}
 
 ::: {layout-ncol="3"}
@@ -425,7 +443,9 @@ vehicle_plot |>
     groups.
 :::
 :::
-
+<!--
+Contributor: Victoria
+-->
 # [RQ2: Statistical Findings]{style="font-size:0.75em;"}
 
 ```{r}
@@ -490,7 +510,9 @@ were more concentrated during late-night and early-morning hours.
 
 -   The overall vehicle-type distribution differed significantly between
     weekend and weekday crashes.
-
+<!--
+Contributor: Precious
+-->
 # [Research Question 3]{style="font-size:0.75em;"}
 
 ::: {style="font-size: 24px;"}
@@ -515,7 +537,9 @@ alcohol involvement, and driver age
 **Methods:** descriptive plots and binary logistic regression for
 nighttime and weekend crash patterns
 :::
-
+<!--
+Contributor: Guanhao
+-->
 # [RQ3: Exploratory Data Analysis]{style="font-size:0.75em;"}
 
 ::: {layout-ncol="2"}
@@ -624,7 +648,9 @@ driver_daynight |>
     was included in the logistic regression
 :::
 :::
-
+<!--
+Contributor: Precious
+-->
 # [RQ3: Statistical Findings]{style="font-size:0.75em;"}
 
 ::: columns
@@ -678,7 +704,9 @@ driver_daynight |>
     hypothesis: there is evidence that certain characteristics are
     associated with fatal crash weekend classification.
 :::
-
+<!--
+Contributor: David
+-->
 # [Project Conclusion]{style="font-size:0.75em;"}
 
 ::: columns
