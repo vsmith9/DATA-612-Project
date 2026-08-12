@@ -1133,23 +1133,7 @@ summary(question3_weekend_full)
 
 ## Overall Project Summary
 
-**Patterns and Predictors:**
-
--   **Fatal crash severity:** Rural crashes had more fatalities but was not significant after controlling for other factors. Severity was more closely related to travel speed, driver age and lighting.
-
--   **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, although sedans and pickups dominated both groups.
-
--   **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states.
-
-**Conceptual takeaways:**
-
--   **crash severity -\> rural had higher raw fatalities**
-
--   **timing -\> more crashes/day on weekends + late-night concentration**
-
--   **key drivers: alcohol + speed + driver characteristics**
-
-**Overall Patterns:** Fatal crash risk reflects when, where, and how crashes occur
+Overall, fatal crash risk reflects when, where, and how crashes occur. Rural crashes had higher raw fatalities, but rural location was not a significant predictor after controlling for other factors. Instead, crash severity was more closely related to travel speed, driver age, and lighting. Fatal crashes were more common on weekends and were concentrated in late-night and early-morning hours, with vehicle types also differing between weekends and weekdays. Alcohol was the strongest and most consistent predictor of nighttime and weekend crash patterns, while driver characteristics and speed also played important roles. Nighttime crash patterns also varied across states.
 
 ## Appendix:
 
