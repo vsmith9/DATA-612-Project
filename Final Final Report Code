@@ -195,7 +195,7 @@ library(tibble)
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Read in the data
 
 vehicle <- read_csv("vehicle.csv")
@@ -206,7 +206,7 @@ accident <- read_csv("accident.csv")
 Create subsets and driver/vehicle joins
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Crash-level subset
 accident_small <- accident |>
   dplyr::select(
@@ -230,7 +230,7 @@ accident_small <- accident |>
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Vehicle-level subset
 vehicle_small <- vehicle |>
   dplyr::select(
@@ -257,7 +257,7 @@ vehicle_small <- vehicle |>
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Person-level subset
 person_small <- person |>
   dplyr::select(
@@ -280,7 +280,7 @@ person_small <- person |>
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Inspect
 glimpse(accident_small)
 glimpse(vehicle_small)
@@ -288,7 +288,7 @@ glimpse(person_small)
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Driver-level subset
 driver_small <- person_small |>
   filter(PER_TYPNAME == "Driver of a Motor Vehicle In-Transport")
@@ -299,30 +299,31 @@ driver_small |>
 ```
 
 ```{r}
-#Contributor: Guanhao
-#Check one driver per vehicle
+# Contributor: Guanhao
+# Check one driver per vehicle
 driver_small |>
   count(ST_CASE, VEH_NO) |>
   filter(n > 1)
 ```
 
 ```{r}
-#Contributor: Guanhao
-#Join vehicle and driver
+# Contributor: Guanhao
+# Join vehicle and driver
 vehicle_driver <- vehicle_small |>
   left_join(driver_small,
-            by = c("ST_CASE", "VEH_NO"))
+    by = c("ST_CASE", "VEH_NO")
+  )
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 glimpse(vehicle_driver)
 
 nrow(vehicle_driver)
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 vehicle_driver |>
   summarise(
     missing_driver = sum(is.na(PER_NO)),
@@ -375,7 +376,7 @@ the number of fatalities per fatal crash.
 Prepping data for question 1
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 ## summarize vehicle level data to one observation per crash (ST_CASE)
 ## there are a lot of missing travel speed values (over half of observations) which creates an issue
 vehicle_summary <- vehicle |>
@@ -383,12 +384,13 @@ vehicle_summary <- vehicle |>
     TRAV_SP = ifelse(
       TRAV_SPNAME %in% c(
         "Not Reported",
-        "Reported as Unknown", 
-        "Stopped Motor Vehicle In-Transport"), 
-      NA, 
+        "Reported as Unknown",
+        "Stopped Motor Vehicle In-Transport"
+      ),
+      NA,
       TRAV_SP
-    ) #replace travel speed codes with NA if their description is not reported, reported as unknown, or stopped motor vehicle in-transport 
-    ) |>
+    ) # replace travel speed codes with NA if their description is not reported, reported as unknown, or stopped motor vehicle in-transport
+  ) |>
   group_by(ST_CASE) |>
   summarise(
     max_travel_speed = max(TRAV_SP, na.rm = TRUE),
@@ -397,55 +399,59 @@ vehicle_summary <- vehicle |>
       "Yes, Exceeded Speed Limit",
       "Yes, Too Fast for Conditions",
       "Yes, Racing",
-      "Yes, Specifics Unknown")
-    )
+      "Yes, Specifics Unknown"
+    ))
   )
-#This summarizes each ST_CASE with a max travel speed, rollover classification, and speed-related classification. The max travel speed returns a real value or a -inf for those with NA
+# This summarizes each ST_CASE with a max travel speed, rollover classification, and speed-related classification. The max travel speed returns a real value or a -inf for those with NA
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 vehicle_summary <- vehicle_summary |>
   mutate(
-    max_travel_speed = ifelse(is.infinite(max_travel_speed), NA, max_travel_speed))
-# This replaces the -inf values with NA 
+    max_travel_speed = ifelse(is.infinite(max_travel_speed), NA, max_travel_speed)
+  )
+# This replaces the -inf values with NA
 
 vehicle_summary <- vehicle_summary |>
   mutate(
-    max_travel_speed = ifelse(max_travel_speed == 997, NA_real_, max_travel_speed))
-# replaces special code 997 (Greater then 151 mph) with NA 
+    max_travel_speed = ifelse(max_travel_speed == 997, NA_real_, max_travel_speed)
+  )
+# replaces special code 997 (Greater then 151 mph) with NA
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 ## summarize driver-level data to one observation per crash (ST_CASE)
-## create variables for youngest and oldest driver in each crash to account for crashes involving multiple drivers 
+## create variables for youngest and oldest driver in each crash to account for crashes involving multiple drivers
 driver_summary <- person |>
   mutate(
     # replacing unknown or unreported driver ages with NA
     AGE = ifelse(AGE >= 998, NA, AGE)
   ) |>
   filter(
-    PER_TYPNAME == "Driver of a Motor Vehicle In-Transport") |>
+    PER_TYPNAME == "Driver of a Motor Vehicle In-Transport"
+  ) |>
   group_by(ST_CASE) |>
   summarise(
     youngest_driver_age = min(AGE, na.rm = TRUE),
     oldest_driver_age = max(AGE, na.rm = TRUE),
     any_drinking = any(DRINKINGNAME == "Yes (Alcohol Involved)", na.rm = TRUE)
   )
-# instead of filtering out the weird ages, I assign NA so we can keep data for the other variables like drinking 
- driver_summary <- driver_summary |>
+# instead of filtering out the weird ages, I assign NA so we can keep data for the other variables like drinking
+driver_summary <- driver_summary |>
   mutate(
     youngest_driver_age = ifelse(is.infinite(youngest_driver_age), NA, youngest_driver_age),
-    oldest_driver_age = ifelse(is.infinite(oldest_driver_age), NA, oldest_driver_age))
-# using the same code from vehicle chunk, we have to replace the inf- from summarizing the NAs with a new NA value 
+    oldest_driver_age = ifelse(is.infinite(oldest_driver_age), NA, oldest_driver_age)
+  )
+# using the same code from vehicle chunk, we have to replace the inf- from summarizing the NAs with a new NA value
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 ## join summarized data from person and vehicle into accident based on ST_CASE
 question1_data <- accident |>
- dplyr::select(
+  dplyr::select(
     ST_CASE,
     RUR_URB,
     RUR_URBNAME,
@@ -459,7 +465,7 @@ question1_data <- accident |>
     FUNC_SYSNAME
   ) |>
   left_join(vehicle_summary, by = "ST_CASE") |>
-  left_join(driver_summary, by = "ST_CASE") 
+  left_join(driver_summary, by = "ST_CASE")
 ```
 
 **Q1 Plots and Models**
@@ -468,12 +474,12 @@ question1_data <- accident |>
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 accident_small |>
   filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
   ggplot(aes(x = RUR_URBNAME)) +
   geom_bar(fill = "steelblue") +
-  labs(title = "Number of Fatal Crashes in Rural and Urban Areas",x = "Area Type",y = "Number of Fatal Crashes") +
+  labs(title = "Number of Fatal Crashes in Rural and Urban Areas", x = "Area Type", y = "Number of Fatal Crashes") +
   theme_minimal(base_size = 14)
 ```
 
@@ -487,7 +493,7 @@ examining differences in crash characteristics and crash severity.
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 accident_small |>
   filter(
     RUR_URBNAME %in% c("Rural", "Urban"),
@@ -521,8 +527,8 @@ of crashes occurring in dark and unlighted conditions, while urban
 crashes more frequently occurred in dark but lighted conditions.
 
 ```{r}
-#Contributor: David
-# describing data for the t-test 
+# Contributor: David
+# describing data for the t-test
 
 question1_ttest <- question1_data |>
   filter(RUR_URBNAME %in% c("Rural", "Urban"))
@@ -537,20 +543,20 @@ question1_ttest |>
 ```
 
 ```{r}
-#Contributor: David
-# t test to compare the average number of fatalities per crash between rural and urban crashes. 
+# Contributor: David
+# t test to compare the average number of fatalities per crash between rural and urban crashes.
 t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
-# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes. 
+# 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes.
 ```
 
 ```{r}
-#Contributor: David
+# Contributor: David
 # negative binomial regression. Due to fatalities being a count variable, we considered a count-based regression model. Specifically, we used a negative binomial regression to account for the possibility of over dispersion.
 
 question1_nbr_model <- glm.nb(
-  FATALS ~ 
-    RUR_URBNAME + 
-    WEATHERNAME + 
+  FATALS ~
+    RUR_URBNAME +
+    WEATHERNAME +
     LGT_CONDNAME +
     HOUR +
     FUNC_SYSNAME +
@@ -579,13 +585,13 @@ the analysis. Also the dispersion parameter was very large meaning the
 data may not have substantial over dispersion.
 
 ```{r}
-#Contributor: David
-# multiple linear regression used to examine how multiple variables are related to the number of fatalities, assuming a linear relationship. 
+# Contributor: David
+# multiple linear regression used to examine how multiple variables are related to the number of fatalities, assuming a linear relationship.
 
 question1_glm_model <- lm(
   FATALS ~
-    RUR_URBNAME + 
-    WEATHERNAME + 
+    RUR_URBNAME +
+    WEATHERNAME +
     LGT_CONDNAME +
     HOUR +
     FUNC_SYSNAME +
@@ -609,13 +615,13 @@ were significant and produced negative coefficients: lighting, youngest
 driver age, and speed related classification.
 
 ```{r}
-#Contributor: David
-# Poisson model used to support count data for the dependent variable, similar to the negative binomial model. 
+# Contributor: David
+# Poisson model used to support count data for the dependent variable, similar to the negative binomial model.
 
 question1_pois_model <- glm(
-   FATALS ~
-    RUR_URBNAME + 
-    WEATHERNAME + 
+  FATALS ~
+    RUR_URBNAME +
+    WEATHERNAME +
     LGT_CONDNAME +
     HOUR +
     FUNC_SYSNAME +
@@ -626,7 +632,7 @@ question1_pois_model <- glm(
     any_rollover +
     any_speed_related,
   family = poisson(link = "log"),
-   data = question1_data
+  data = question1_data
 )
 
 summary(question1_pois_model)
@@ -695,18 +701,20 @@ The following code creates a new variable that classifies crashes as
 either occurring on a weekday or a weekend.
 
 ```{r}
-#Contributor: Victoria
+# Contributor: Victoria
 # Create weekend indicator at accident level
 accident_weekend <- accident_small |>
   mutate(
     weekend = if_else(
       DAY_WEEKNAME %in% c("Saturday", "Sunday"),
       "Weekend",
-      "Weekday"))
+      "Weekday"
+    )
+  )
 ```
 
 ```{r}
-#Contributor: Victoria
+# Contributor: Victoria
 # Counts by weekend/weekday
 accident_weekend |>
   count(weekend)
@@ -716,7 +724,7 @@ accident_weekend |>
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 accident_weekend |>
   count(weekend) |>
   mutate(
@@ -751,7 +759,7 @@ during weekends on a per-day basis.
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 accident_weekend |>
   filter(HOUR >= 0, HOUR <= 23) |>
   count(weekend, HOUR) |>
@@ -789,7 +797,7 @@ using the logistic regression model below.
 **Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes**
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 accident_weekend <- accident_small |>
   mutate(
     weekend = if_else(
@@ -801,23 +809,23 @@ accident_weekend <- accident_small |>
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 vehicle_plot <- vehicle_driver |>
   left_join(
     accident_weekend |>
-     dplyr::select(ST_CASE, weekend),
+      dplyr::select(ST_CASE, weekend),
     by = "ST_CASE"
   )
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 vehicle_plot |>
   count(BODY_TYPNAME, sort = TRUE)
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 vehicle_plot <- vehicle_plot |>
   mutate(
     vehicle_type = case_when(
@@ -833,7 +841,7 @@ vehicle_plot <- vehicle_plot |>
 ```
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 top_vehicle <- vehicle_plot |>
   count(vehicle_type, sort = TRUE) |>
   slice_head(n = 6) |>
@@ -844,7 +852,7 @@ top_vehicle
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 ### Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
 
 vehicle_plot |>
@@ -882,12 +890,12 @@ Test 1: Are fatal crashes more common on weekends than weekdays (per
 day)?
 
 ```{r}
-#Contributor: Victoria
+# Contributor: Victoria
 # Chi-square test: weekend vs weekday counts vs expected 5/7, 2/7
 weekend_counts <- accident_weekend |>
   count(weekend)
 
-chisq.test(weekend_counts$n, p = c(5/7, 2/7))
+chisq.test(weekend_counts$n, p = c(5 / 7, 2 / 7))
 ```
 
 A chi-squared test was used to examine whether fatal crashes were
@@ -900,7 +908,7 @@ Test 2: Does vehicle type distribution differ between weekend and
 weekday crashes?
 
 ```{r}
-#Contributor: Victoria
+# Contributor: Victoria
 # Chi-square test: vehicle type distribution by weekend/weekday
 vehicle_weekend_table <- vehicle_plot |>
   filter(vehicle_type %in% top_vehicle) |>
@@ -921,7 +929,7 @@ Test 3: Logistic regression- Is hour of day associated with a fatal
 crash occuring on the weekend?
 
 ```{r}
-#Contributor: Victoria
+# Contributor: Victoria
 # Crash-level dataset for logistic regression: weekend vs weekday
 accident_model_data <- accident_weekend |>
   filter(HOUR >= 0, HOUR <= 23) |>
@@ -975,7 +983,7 @@ occurs on a weekend and at night versus a weekday and/or daytime?
 **Plot 1: Fatal Crashes During Day and Night**
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Driver-level data joined with day/night
 accident_daynight <- accident_small |>
   mutate(
@@ -990,7 +998,7 @@ accident_daynight <- accident_small |>
 **Plot 1: Driver Alcohol Involvement by Day and Night**
 
 ```{r}
-#Contributor: Guanhao
+# Contributor: Guanhao
 # Join driver information with crash-level day/night and location information.
 
 driver_daynight <- driver_small |>
@@ -1015,7 +1023,7 @@ driver_daynight <- driver_small |>
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 driver_daynight |>
   filter(!is.na(alcohol_involvement)) |>
   ggplot(
@@ -1044,7 +1052,7 @@ using a chi-square test.
 
 ```{r}
 #| output: true
-#Contributor: Guanhao
+# Contributor: Guanhao
 ### Plot 3: Driver Age Distribution During Day and Night
 
 driver_daynight |>
@@ -1119,7 +1127,7 @@ three questions draw from the same cleaned predictors (max travel speed,
 driver age, alcohol, rollover, speed-related).
 
 ```{r}
-#Contributor: Precious
+# Contributor: Precious
 driver_model_data <- driver_daynight |>
   filter(
     !is.na(day_night),
@@ -1159,8 +1167,8 @@ model_night_driver <- glm(
 )
 
 summary(model_night_driver)
-# model predicts whether a fatal crash occurred at night 
-# versus during the day using alcohol involvement, driver characteristics, and state variables. 
+# model predicts whether a fatal crash occurred at night
+# versus during the day using alcohol involvement, driver characteristics, and state variables.
 ```
 
 Alcohol involvement had a very strong association with predicting
@@ -1181,7 +1189,7 @@ crashes. (CA had a 1.33 odds ratio) \### Model A: Night vs. day, with
 stepwise variable selection
 
 ```{r}
-#Contributor: Precious
+# Contributor: Precious
 # Model A: Night vs. day
 
 accident_model_daynight <- accident_daynight |>
@@ -1230,13 +1238,13 @@ model_night_crash <- glm(
 )
 
 summary(model_night_crash)
-# slight issue with model using hour as a predictor of night-time status 
+# slight issue with model using hour as a predictor of night-time status
 ```
 
 Model B: Weekend vs. weekday, with stepwise variable selection
 
 ```{r}
-#Contributor: Precious
+# Contributor: Precious
 # Create data for Research Question 3 weekend model.
 
 question3_data <- accident_weekend |>
@@ -1264,7 +1272,7 @@ question3_data <- accident_weekend |>
 ```
 
 ```{r}
-#Contributor: Precious
+# Contributor: Precious
 # Model B: Weekend vs. Weekday
 
 question3_weekend_full <- glm(
