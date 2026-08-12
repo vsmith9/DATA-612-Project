@@ -6,8 +6,6 @@ editor: visual
     wrap: 72
 ---
 
-title: "Final Report"
-
 # Project Title:
 
 Examining Patterns and Predictors of Fatal Vehicle Crashes Across Geographic and Temporal Factors
@@ -45,24 +43,24 @@ As we began working through our project, we identified the following hypotheses 
 
 ### Research Question #1
 
-- Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes. Crash, roadway, and driver characteristics are not associated with the number of fatalities per crash.
-- Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes. Crash, roadway, and driver characteristics are associated with the number of fatalities per crash.
+-   Null hypothesis: There is no difference in the number of fatalities per crash between rural and urban crashes. Crash, roadway, and driver characteristics are not associated with the number of fatalities per crash.
+-   Alternative hypothesis: Rural fatal crashes involve a greater number of fatalities per crash than urban fatal crashes. Crash, roadway, and driver characteristics are associated with the number of fatalities per crash.
 
 ### Research Question #2:
 
-- Null hypothesis: There is no difference between the number of crashes that occur on the weekends versus the weekdays, and these are no significant difference in the timing or types of vehicles involved.
-- Alternative hypothesis: The frequency of fatal crashes differs between weekends and weekdays, and the timing and types of vehicles differ between weekend and weekday crashes.
+-   Null hypothesis: There is no difference between the number of crashes that occur on the weekends versus the weekdays, and these are no significant difference in the timing or types of vehicles involved.
+-   Alternative hypothesis: The frequency of fatal crashes differs between weekends and weekdays, and the timing and types of vehicles differ between weekend and weekday crashes.
 
 ### Research Question #3:
 
-- Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
-- Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
-
+-   Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
+-   Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
 
 ## Original Data Collection and Purpose
+
 The Fatality Analysis Reporting System was created and is maintained by the National Highway Traffic Safety Administration (NHTSA). FARS is a nationwide census that provides yearly data about fatalities that occur in motor vehicle traffic crashes.
 
-The data were originally collected to help identify traffic-safety problems, understand factors related to fatal crashes, support highway-safety programs, and evaluate vehicle and traffic-safety regulations. FARS information is compiled from sources such as police crash reports, driver records, vehicle registration records, death certificates, toxicology reports, emergency medical service reports, and roadway information (https://www.nhtsa.gov/crash-data-systems/fatality-analysis-reporting-system)--Need to add it as a citation.
+The data were originally collected to help identify traffic-safety problems, understand factors related to fatal crashes, support highway-safety programs, and evaluate vehicle and traffic-safety regulations. FARS information is compiled from sources such as police crash reports, driver records, vehicle registration records, death certificates, toxicology reports, emergency medical service reports, and roadway information (Fatality Analysis Reporting System, 2024).
 
 ## Literature Review:
 
@@ -88,7 +86,6 @@ The data were originally collected to help identify traffic-safety problems, und
 
 As we began exploring the literature and conducting analysis of our data, our revised research question, corresponding hypotheses, independent and dependent variables, key predictors, and methods can be found below:
 
-
 ```{r}
 # Load libraries
 
@@ -101,6 +98,7 @@ library(tibble)
 ```
 
 ```{r}
+#Contributor: Guanhao
 # Read in the data
 
 vehicle <- read_csv("FARS2024NationalCSV/vehicle.csv")
@@ -111,6 +109,7 @@ accident <- read_csv("FARS2024NationalCSV/accident.csv")
 Create subsets and driver/vehicle joins
 
 ```{r}
+#Contributor: Guanhao
 # Crash-level subset
 accident_small <- accident |>
   dplyr::select(
@@ -134,6 +133,7 @@ accident_small <- accident |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 # Vehicle-level subset
 vehicle_small <- vehicle |>
   dplyr::select(
@@ -160,6 +160,7 @@ vehicle_small <- vehicle |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 # Person-level subset
 person_small <- person |>
   dplyr::select(
@@ -182,6 +183,7 @@ person_small <- person |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 # Inspect
 glimpse(accident_small)
 glimpse(vehicle_small)
@@ -189,6 +191,7 @@ glimpse(person_small)
 ```
 
 ```{r}
+#Contributor: Guanhao
 # Driver-level subset
 driver_small <- person_small |>
   filter(PER_TYPNAME == "Driver of a Motor Vehicle In-Transport")
@@ -199,6 +202,7 @@ driver_small |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 #Check one driver per vehicle
 driver_small |>
   count(ST_CASE, VEH_NO) |>
@@ -206,6 +210,7 @@ driver_small |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 #Join vehicle and driver
 vehicle_driver <- vehicle_small |>
   left_join(driver_small,
@@ -213,12 +218,14 @@ vehicle_driver <- vehicle_small |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 glimpse(vehicle_driver)
 
 nrow(vehicle_driver)
 ```
 
 ```{r}
+#Contributor: Guanhao
 vehicle_driver |>
   summarise(
     missing_driver = sum(is.na(PER_NO)),
@@ -226,7 +233,7 @@ vehicle_driver |>
   )
 ```
 
-#Driver information was unavailable for 391 of the 56,011 vehicle records. These records were retained because they may still be used in analyses that do not require driver-level characteristics.
+Driver information was unavailable for 391 of the 56,011 vehicle records. These records were retained because they may still be used in analyses that do not require driver-level characteristics.
 
 ## Research Question #1
 
@@ -234,8 +241,8 @@ vehicle_driver |>
 
 ### Hypotheses
 
-- Null hypothesis: The mean number of fatalities per crash is equal for rural and urban crashes. Additionally, crash, roadway, and driver characteristics have no association with the number of fatalities per crash.
-- Alternative hypothesis: The mean number of fatalities per crash is greater for rural populations than urban. At least one characteristic-- crash, roadway, and driver is associated with the number of fatalities per crash.
+-   Null hypothesis: The mean number of fatalities per crash is equal for rural and urban crashes. Additionally, crash, roadway, and driver characteristics have no association with the number of fatalities per crash.
+-   Alternative hypothesis: The mean number of fatalities per crash is greater for rural populations than urban. At least one characteristic-- crash, roadway, and driver is associated with the number of fatalities per crash.
 
 ### Variables
 
@@ -254,6 +261,7 @@ vehicle_driver |>
 ### Prepping data for question 1
 
 ```{r}
+#Contributor: Guanhao
 ## summarize vehicle level data to one observation per crash (ST_CASE)
 ## there are a lot of missing travel speed values (over half of observations) which creates an issue
 vehicle_summary <- vehicle |>
@@ -282,6 +290,7 @@ vehicle_summary <- vehicle |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 vehicle_summary <- vehicle_summary |>
   mutate(
     max_travel_speed = ifelse(is.infinite(max_travel_speed), NA, max_travel_speed))
@@ -294,6 +303,7 @@ vehicle_summary <- vehicle_summary |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 ## summarize driver-level data to one observation per crash (ST_CASE)
 ## create variables for youngest and oldest driver in each crash to account for crashes involving multiple drivers 
 driver_summary <- person |>
@@ -318,6 +328,7 @@ driver_summary <- person |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 ## join summarized data from person and vehicle into accident based on ST_CASE
 question1_data <- accident |>
  dplyr::select(
@@ -337,9 +348,12 @@ question1_data <- accident |>
   left_join(driver_summary, by = "ST_CASE") 
 ```
 
-###Q1 plots and models \### Plot 1: Number of Fatal Crashes by Rural vs Urban
+### Q1 Plots and Models
+
+## Plot 1: Number of Fatal Crashes by Rural vs Urban
 
 ```{r}
+#Contributor: Guanhao
 accident_small |>
   filter(RUR_URBNAME %in% c("Rural", "Urban")) |>
   ggplot(aes(x = RUR_URBNAME)) +
@@ -348,15 +362,14 @@ accident_small |>
   theme_minimal(base_size = 14)
 ```
 
-# Urban areas had a larger number of fatal crashes than rural areas in this dataset.
-# This figure provides an overview of where fatal crashes occurred before examining
-# differences in crash characteristics and crash severity.
+Urban areas had a larger number of fatal crashes than rural areas in this dataset.
 
+This figure provides an overview of where fatal crashes occurred before examining differences in crash characteristics and crash severity.
 
-
-### Plot 2:Lighting Conditions in Rural vs Urban Areas
+### Plot 2: Lighting Conditions in Rural vs Urban Areas
 
 ```{r}
+#Contributor: Guanhao
 accident_small |>
   filter(
     RUR_URBNAME %in% c("Rural", "Urban"),
@@ -382,12 +395,12 @@ accident_small |>
   theme_minimal(base_size = 14)
 ```
 
-# Daylight was the most common lighting condition in both rural and urban areas.
-# Compared with urban areas, rural fatal crashes had a higher proportion of crashes
-# occurring in dark and unlighted conditions, while urban crashes more frequently
-# occurred in dark but lighted conditions.
+-   Daylight was the most common lighting condition in both rural and urban areas.
+
+-   Compared with urban areas, rural fatal crashes had a higher proportion of crashes occurring in dark and unlighted conditions, while urban crashes more frequently occurred in dark but lighted conditions.
 
 ```{r}
+#Contributor: David
 # describing data for the t-test 
 
 question1_ttest <- question1_data |>
@@ -403,12 +416,14 @@ question1_ttest |>
 ```
 
 ```{r}
+#Contributor: David
 # t test to compare the average number of fatalities per crash between rural and urban crashes. 
 t.test(FATALS ~ RUR_URBNAME, data = question1_ttest)
 # 95% confident that rural crashes average between 0.036 and 0.052 more fatalities per crash than urban crashes. 
 ```
 
 ```{r}
+#Contributor: David
 # negative binomial regression. Due to fatalities being a count variable, we considered a count-based regression model. Specifically, we used a negative binomial regression to account for the possibility of over dispersion.
 
 question1_nbr_model <- glm.nb(
@@ -428,11 +443,14 @@ question1_nbr_model <- glm.nb(
 )
 
 summary(question1_nbr_model)
-# Rural vs urban classification was not statistically significant after controlling for the other variables. Maximum travel speed was statistically significant and produced a positive coefficient. Youngest driver age was statistically significant and produced a negative coefficient. Oldest driver age was statistically significant and produced a positive coefficient. 
-# The negative binomial regression should be interpreted with caution. The model dropped 22,697 observations, leaving only 13,600 observations for the analysis. Also the dispersion parameter was very large meaning the data may not have substantial overdispersion. 
 ```
 
+Rural vs urban classification was not statistically significant after controlling for the other variables. Maximum travel speed was statistically significant and produced a positive coefficient. Youngest driver age was statistically significant and produced a negative coefficient. Oldest driver age was statistically significant and produced a positive coefficient.
+
+The negative binomial regression should be interpreted with caution. The model dropped 22,697 observations, leaving only 13,600 observations for the analysis. Also the dispersion parameter was very large meaning the data may not have substantial overdispersion.
+
 ```{r}
+#Contributor: David
 # multiple linear regression used to examine how multiple variables are related to the number of fatalities, assuming a linear relationship. 
 
 question1_glm_model <- lm(
@@ -452,11 +470,12 @@ question1_glm_model <- lm(
 )
 
 summary(question1_glm_model)
-# model was statistically significant, confirming that some of the independent variables were significantly related to the number of fatalities. These variables were significant and produced positive coefficients: Maximum travel speed, oldest driver age. These variables were significant and produced negative coefficients: lighting, youngest driver age, and speed related classification. 
-
 ```
 
+The model was statistically significant, confirming that some of the independent variables were significantly related to the number of fatalities. These variables were significant and produced positive coefficients: Maximum travel speed, oldest driver age. These variables were significant and produced negative coefficients: lighting, youngest driver age, and speed related classification.
+
 ```{r}
+#Contributor: David
 # Poisson model used to support count data for the dependent variable, similar to the negative binomial model. 
 
 question1_pois_model <- glm(
@@ -477,11 +496,13 @@ question1_pois_model <- glm(
 )
 
 summary(question1_pois_model)
-# Similar to the negative binomial regression, there was no statistically significant difference in fatalities between rural and urban crashes. Maximum travel speed was significant with a positive coefficient. Youngest driver age was significant with a negative coefficient. Oldest driver age was significant with a positive coefficient.
 ```
-## Question 1 Summary
-Overall, our findings provide partial support for our alternative hypothesis that fatal crash outcomes are associated with geographic, crash, roadway, vehicle, and driver characteristics. Urban areas had more fatal crashes in the dataset, while rural crashes had a higher proportion of crashes occurring in dark and unlighted areas. The negative binomial regression model was statistically significant, with maximum travel speed and oldest driver ages positively associated with the number of fatalities, while lighting, driver age, and speed-related classification had negative associations. 
 
+Similar to the negative binomial regression, there was no statistically significant difference in fatalities between rural and urban crashes. Maximum travel speed was significant with a positive coefficient. Youngest driver age was significant with a negative coefficient. Oldest driver age was significant with a positive coefficient.
+
+## Question 1 Summary
+
+Overall, our findings provide partial support for our alternative hypothesis that fatal crash outcomes are associated with geographic, crash, roadway, vehicle, and driver characteristics. Urban areas had more fatal crashes in the dataset, while rural crashes had a higher proportion of crashes occurring in dark and unlighted areas. The negative binomial regression model was statistically significant, with maximum travel speed and oldest driver ages positively associated with the number of fatalities, while lighting, driver age, and speed-related classification had negative associations.
 
 ## Research Question 2
 
@@ -489,28 +510,29 @@ Research Question: Within the set of fatal crashes, are crashes more common on w
 
 ### Hypotheses
 
-- Null hypothesis: The population of fatal crashes occurring on weekends is equal to the population proportion occurring on weekdays. In addition, the distributions of timing and vehicle characteristics do not differ between weekend and weekday fatal crashes. 
-- Alternative hypothesis: The population proportion of fatal crashes occurring on weekends differs from the population proportion occurring on weekdays. In addition, timing and vehicle characteristics are associated with whether a fatal crash occurs on a weekend versus a weekday. 
+-   Null hypothesis: The population of fatal crashes occurring on weekends is equal to the population proportion occurring on weekdays. In addition, the distributions of timing and vehicle characteristics do not differ between weekend and weekday fatal crashes.
+-   Alternative hypothesis: The population proportion of fatal crashes occurring on weekends differs from the population proportion occurring on weekdays. In addition, timing and vehicle characteristics are associated with whether a fatal crash occurs on a weekend versus a weekday.
 
 ### Variables
 
-- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
-- Dependent variable: Weekend (weekend vs weekday).
+-   Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+-   Dependent variable: Weekend (weekend vs weekday).
 
 ### Key Predictors
 
-- HOUR, lighting (LGT_COND), rural/urban (RUR_URB), state, vehicle body type (VPICBODY), speed‑related indicators.
+-   HOUR, lighting (LGT_COND), rural/urban (RUR_URB), state, vehicle body type (VPICBODY), speed‑related indicators.
 
 ### Methods
 
-- Compare the frequency of fatal crashes that occur on weekends vs weekdays.
-- Logistic regression for weekend vs weekday with crash and vehicle predictors.
+-   Compare the frequency of fatal crashes that occur on weekends vs weekdays.
+-   Logistic regression for weekend vs weekday with crash and vehicle predictors.
 
 ### Create Weekend Variable and crash-level data
 
 The following code creates a new variable that classifies crashes as either occurring on a weekday or a weekend.
 
 ```{r}
+#Contributor: Victoria
 # Create weekend indicator at accident level
 accident_weekend <- accident_small |>
   mutate(
@@ -521,6 +543,7 @@ accident_weekend <- accident_small |>
 ```
 
 ```{r}
+#Contributor: Victoria
 # Counts by weekend/weekday
 accident_weekend |>
   count(weekend)
@@ -529,7 +552,7 @@ accident_weekend |>
 ### Plot 1: Average Fatal Crashes per Day
 
 ```{r}
-
+#Contributor: Guanhao
 accident_weekend |>
   count(weekend) |>
   mutate(
@@ -555,16 +578,12 @@ accident_weekend |>
   theme_minimal(base_size = 14)
 ```
 
-# After accounting for the different number of weekdays and weekend days,
-# the average number of fatal crashes per day was higher on weekends than
-# on weekdays. This suggests that fatal crashes occurred more frequently
-# during weekends on a per-day basis.
-
-
+After accounting for the different number of weekdays and weekend days, the average number of fatal crashes per day was higher on weekends than on weekdays. This suggests that fatal crashes occurred more frequently during weekends on a per-day basis.
 
 ### Plot 2: Distribution of Fatal Crashes by Hour
 
 ```{r}
+#Contributor: Guanhao
 accident_weekend |>
   filter(HOUR >= 0, HOUR <= 23) |>
   count(weekend, HOUR) |>
@@ -590,17 +609,15 @@ accident_weekend |>
   scale_x_continuous(breaks = seq(0, 23, by = 2)) +
   theme_minimal(base_size = 14)
 ```
-# The hourly patterns of fatal crashes differed between weekdays and weekends.
-# Weekend crashes were more concentrated during the late-night and early-morning
-# hours, while weekday crashes were relatively more common during daytime and
-# commuting hours. These patterns were examined further using the logistic
-# regression model below.
 
+-   The hourly patterns of fatal crashes differed between weekdays and weekends.
 
+-   Weekend crashes were more concentrated during the late-night and early-morning hours, while weekday crashes were relatively more common during daytime and ommuting hours. These patterns were examined further using the logistic regression model below.
 
 ## Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
 
 ```{r}
+#Contributor: Guanhao
 accident_weekend <- accident_small |>
   mutate(
     weekend = if_else(
@@ -612,6 +629,7 @@ accident_weekend <- accident_small |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 vehicle_plot <- vehicle_driver |>
   left_join(
     accident_weekend |>
@@ -621,11 +639,13 @@ vehicle_plot <- vehicle_driver |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 vehicle_plot |>
   count(BODY_TYPNAME, sort = TRUE)
 ```
 
 ```{r}
+#Contributor: Guanhao
 vehicle_plot <- vehicle_plot |>
   mutate(
     vehicle_type = case_when(
@@ -641,6 +661,7 @@ vehicle_plot <- vehicle_plot |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 top_vehicle <- vehicle_plot |>
   count(vehicle_type, sort = TRUE) |>
   slice_head(n = 6) |>
@@ -650,6 +671,7 @@ top_vehicle
 ```
 
 ```{r}
+#Contributor: Guanhao
 ### Plot 3: Vehicle Types in Weekday and Weekend Fatal Crashes
 
 vehicle_plot |>
@@ -676,14 +698,16 @@ vehicle_plot |>
   )
 ```
 
-# Sedans and pickup trucks were the most common vehicle types involved
-# in fatal crashes on both weekdays and weekends. The overall distribution
-# of vehicle types appeared similar across the two groups and was examined
-# further using a chi-square test below.
+-   Sedans and pickup trucks were the most common vehicle types involved
+
+-   In fatal crashes on both weekdays and weekends. The overall distribution
+
+-   Of vehicle types appeared similar across the two groups and was examined further using a chi-square test below.
 
 ### Test 1: Are fatal crashes more common on weekends than weekdays (per day)?
 
 ```{r}
+#Contributor: Victoria
 # Chi-square test: weekend vs weekday counts vs expected 5/7, 2/7
 weekend_counts <- accident_weekend |>
   count(weekend)
@@ -697,6 +721,7 @@ A chi-squared test was used to examine whether fatal crashes were distributed ac
 ### Test 2: Does vehicle type distribution differ between weekend and weekday crashes?
 
 ```{r}
+#Contributor: Victoria
 # Chi-square test: vehicle type distribution by weekend/weekday
 vehicle_weekend_table <- vehicle_plot |>
   filter(vehicle_type %in% top_vehicle) |>
@@ -709,11 +734,12 @@ chisq.test(vehicle_weekend_table)
 
 ```
 
-A chi-square test looking between vehicle type and weekend/weekday status was significant at the 0.05 p-level, indicating that the distribution of vehicle types involved in fatal crashes differs between weekends and weekdays.
+A chi-square test looking between vehicle type and weekend/weekday status was significant at the 0.01 p-level, indicating that the distribution of vehicle types involved in fatal crashes differs between weekends and weekdays.
 
 ### Test 3: Logistic regression- Is hour of day associated with a fatal crash occuring on the weekend?
 
 ```{r}
+#Contributor: Victoria
 # Crash-level dataset for logistic regression: weekend vs weekday
 accident_model_data <- accident_weekend |>
   filter(HOUR >= 0, HOUR <= 23) |>
@@ -739,7 +765,9 @@ summary(model_weekend_hour)
 ```
 
 A binary logistic regression was used to determine whether the time of day was associated with a fatal crash occurring on a weekend rather than a weekday. Compared with crashes occurring at midnight (which was the reference point), fatal crashes occurring between 1-3 am had higher odds of occurring on weekends. The strongest of those times occurred at 2 am, when fatal crashes had approximately 1.45 times the odds of occurring on a weekend compared with midnight crashes. On the other hand, crashes occurring from the morning through the evening generally had significantly lower odds of occurring on weekends.
-## Question 2 Summary 
+
+## Question 2 Summary
+
 Overall, our findings support the alternative hypothesis that fatal-crash frequency, timing, and vehicle characteristics differ between weekends and weekdays. Fatal crashes occurred at a significantly higher rate per day on weekends than on weekdays, and weekend crashes were more concentrated during late-night and early-morning hours. Sedans and pickup trucks were the most common vehicle types in both groups; however, the chi-square test indicated that the overall distribution of vehicle types differed significantly by weekend versus weekday status.
 
 ## Research Question 3
@@ -749,6 +777,7 @@ Research Question: For fatal crashes, which state, crash, vehicle, and driver ch
 ## Plot 1: Fatal Crashes During Day and Night
 
 ```{r}
+#Contributor: Guanhao
 # Driver-level data joined with day/night
 accident_daynight <- accident_small |>
   mutate(
@@ -760,11 +789,10 @@ accident_daynight <- accident_small |>
   )
 ```
 
-
-
 ## Plot 1: Driver Alcohol Involvement by Day and Night
 
 ```{r}
+#Contributor: Guanhao
 # Join driver information with crash-level day/night and location information.
 
 driver_daynight <- driver_small |>
@@ -788,6 +816,7 @@ driver_daynight <- driver_small |>
 ```
 
 ```{r}
+#Contributor: Guanhao
 driver_daynight |>
   filter(!is.na(alcohol_involvement)) |>
   ggplot(
@@ -807,13 +836,12 @@ driver_daynight |>
   theme_minimal(base_size = 14)
 ```
 
-# Alcohol involvement was substantially more common in nighttime fatal crashes
-# than in daytime fatal crashes. In contrast, most daytime fatal crashes did not
-# involve alcohol. This relationship was examined further using a chi-square test.
+Alcohol involvement was substantially more common in nighttime fatal crashes than in daytime fatal crashes. In contrast, most daytime fatal crashes did not involve alcohol. This relationship was examined further using a chi-square test.
 
 # Plot 2: Driver Age Distribution During Day and Night
 
 ```{r}
+#Contributor: Guanhao
 ### Plot 3: Driver Age Distribution During Day and Night
 
 driver_daynight |>
@@ -839,42 +867,101 @@ driver_daynight |>
     legend.position = "none"
   )
 ```
-# The age distributions of drivers involved in daytime and nighttime fatal crashes
-# were generally similar, although nighttime crashes showed a slightly wider spread
-# of driver ages. Driver age was included as a predictor in the logistic regression
-# model below to evaluate its relationship with crash timing.
 
-
-
-## Research Question 3: Statistical Analysis (NEW — fill in after RQ3 EDA)
+The age distributions of drivers involved in daytime and nighttime fatal crashes were generally similar, although nighttime crashes showed a slightly wider spread of driver ages. Driver age was included as a predictor in the logistic regression model below to evaluate its relationship with crash timing.
 
 ## Research Question #3:
 
-- For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
+-   For fatal crashes, which state, crash, vehicle, and driver characteristics are most strongly associated with whether a crash occurs on a weekend and at night versus a weekday and/or daytime?
 
 ### Hypotheses
 
-- Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
-- Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
+-   Null hypothesis: There is no association between state, crash, vehicle, and driver characteristics and whether a fatal crash occurs on a weekend or at night.
+-   Alternative hypothesis: State, crash, vehicle, and driver characteristics are significantly associated with whether a fatal crash occurs on a weekend or at night.
 
 ### Variables
 
-- Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
-- Dependent variable A: Weekend (weekend vs weekday).
-- Dependent variable B: Night vs Day (using HOUR and/or LGT_COND to define night/day).
+-   Independent variable: Characteristics (STATE, RUR_URB, TRAV_SP, SPEEDREL, DRINKING, et.al)
+-   Dependent variable A: Weekend (weekend vs weekday).
+-   Dependent variable B: Night vs Day (using HOUR and/or LGT_COND to define night/day).
 
 ### Key Predictors
 
-- State (STATE), rural/urban (RUR_URB), weather, lighting (LGT_COND), time (HOUR), travel speed (TRAV_SP), speed‑related (SPEEDREL), rollover, driver alcohol (DRINKING), age, sex.
+-   State (STATE), rural/urban (RUR_URB), weather, lighting (LGT_COND), time (HOUR), travel speed (TRAV_SP), speed‑related (SPEEDREL), rollover, driver alcohol (DRINKING), age, sex.
 
 ### Methods
 
-- Binary logistic regression with variable selection to identify which predictors matter for weekend vs weekday and night vs day.
-
+-   Binary logistic regression with variable selection to identify which predictors matter for weekend vs weekday and night vs day.
 
 Reuses `vehicle_summary` / `driver_summary` from the RQ1 modeling doc so all three questions draw from the same cleaned predictors (max travel speed, driver age, alcohol, rollover, speed-related).
 
 ```{r}
+#Contributor: Guanhao
+### Plot 1: Night vs. Day accidents by Alcohol Consumption
+ggplot(
+  driver_model_data, 
+  aes(x = alcohol_involved, fill = night_binary)
+) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Nighttime vs. Daytime Crashes by Alcohol Involvement", 
+    x = "Alcohol Involvement", 
+    y = "Percentage of Crashes", 
+    fill = "Crash Time"
+) + 
+theme_minimal()
+
+#Alcohol consumption is more common in nighttime fatal crashes (~70%) than in daytime crashes (~26%). 
+
+### Plot 2: Night vs. Day accidents by Driver Age
+
+driver_model_data_age <- driver_model_data |>
+  filter(AGE != 999, !is.na(AGE))
+
+ggplot(
+  driver_model_data,
+  aes(x = AGE, fill = night_binary)
+) +
+  geom_histogram(
+    binwidth = 5,
+    position = "identity",
+    alpha = 0.5
+  ) +
+  labs(
+    title = "Driver Age Distribution by Crash Time",
+    x = "Driver Age",
+    y = "Number of Drivers",
+    fill = "Crash Time"
+  ) +
+  theme_minimal()
+```
+
+The graph shows us that younger drivers are more likely to be involved in nighttime crashes, while older adults are more likely to have daytime crashes. While the concentration of nighttime crashes versus daytime crashes is greater among younger drivers, we know that this graph shows the distribution of drivers involved in fatal crashes rather than the likelihood of a crash occurring at a particular age.
+
+```{r}
+#Contributor: Guanhao
+### Plot 3: Night vs. Day accidents by Rural vs. Urban 
+
+ggplot(
+  driver_model_data,
+  aes(x = RUR_URBNAME, fill = night_binary)
+) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Nighttime vs. Daytime Crashes by Rural/Urban Location",
+    x = "Location",
+    y = "Percentage of Crashes",
+    fill = "Crash Time"
+  ) +
+  theme_minimal()
+```
+
+This graph shows us that there is a higher concentration of urban crashes occurring in the nighttime versus rural crashes occurring in the daytime. The graph segregates these crashes based on those reported as rural and urban. We can see that approximately 25% of rural crashes occur in the daytime versus approximately 45% of urban crashes occurring at nighttime.
+
+```{r}
+#Contributor: Precious
 driver_model_data <- driver_daynight |>
   filter(
     !is.na(day_night),
@@ -917,16 +1004,15 @@ summary(model_night_driver)
 # model predicts whether a fatal crash occurred at night 
 # versus during the day using alcohol involvement, driver characteristics, and state variables. 
 
-# alcohol involvement had a very strong association with predicting nighttime crashes (very significant p-value and a  3.41 odds ratio)
-# older driver age was associated with lower odds of nighttime crashes (significant p-value and 0.981 odds ratio). Each additional year of age reduced the odds of nighttime crash by about 1.9%
-# Male drivers were associated with more nighttime crashes (significant p-value and a 1.21 odds ratio). Male drivers had about 21% higher odds of nighttime crash involvement. 
-# Rural and urban classification was not significant. 
-# state level results vary. California, Delaware, Florida, Nevada, New Mexico, and Texas had significant p-values with higher odds of nighttime crashes. (CA had a 1.33 odds ratio)
 ```
 
-### Model A: Night vs. day, with stepwise variable selection
+-   Alcohol involvement had a very strong association with predicting nighttime crashes (very significant p-value and a 3.41 odds ratio). Older driver age was associated with lower odds of nighttime crashes (significant p-value and 0.981 odds ratio). Each additional year of age reduced the odds of nighttime crash by about 1.9%.
+-   Male drivers were associated with more nighttime crashes (significant p-value and a 1.21 odds ratio). Male drivers had about 21% higher odds of nighttime crash involvement.
+-   Rural and urban classification was not significant.
+-   State level results vary. California, Delaware, Florida, Nevada, New Mexico, and Texas had significant p-values with higher odds of nighttime crashes. (CA had a 1.33 odds ratio) \### Model A: Night vs. day, with stepwise variable selection
 
 ```{r}
+#Contributor: Precious
 # Model A: Night vs. day
 
 accident_model_daynight <- accident_daynight |>
@@ -981,6 +1067,7 @@ summary(model_night_crash)
 ### Model B: Weekend vs. weekday, with stepwise variable selection
 
 ```{r}
+#Contributor: Precious
 # Create data for Research Question 3 weekend model.
 
 question3_data <- accident_weekend |>
@@ -1008,6 +1095,7 @@ question3_data <- accident_weekend |>
 ```
 
 ```{r}
+#Contributor: Precious
 # Model B: Weekend vs. Weekday
 
 question3_weekend_full <- glm(
@@ -1025,105 +1113,50 @@ question3_weekend_full <- glm(
 )
 
 summary(question3_weekend_full)
-# used a linear regression model to predict whether a crash was on the weekend or weekday using various crash characteristics. 
-# Travel speed, driver age, and alcohol involvement were significant predictors of weekend classification. 
 # travel speed (higher -> weekend)
 # youngest driver age (older -> weekend)
 # oldest driver age (older -> weekday)
 # alcohol (higher -> weekend ) (1.87 odds ratio)
 ```
 
+-   Used a linear regression model to predict whether a crash was on the weekend or weekday using various crash characteristics.
+-   Travel speed, driver age, and alcohol involvement were significant predictors of weekend classification.
+
 **Note:** `STATE` is deliberately excluded from both models above — 50+ levels would make interpretation unwieldy in a standard `glm()`. If the rubric explicitly wants state-level effects, that would require a mixed/multilevel model, which is a bigger lift — flag this with your group before deciding.
 
-```{r}
-### Plot 1: Night vs. Day accidents by Alcohol Consumption
-ggplot(
-  driver_model_data, 
-  aes(x = alcohol_involved, fill = night_binary)
-) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    title = "Nighttime vs. Daytime Crashes by Alcohol Involvement", 
-    x = "Alcohol Involvement", 
-    y = "Percentage of Crashes", 
-    fill = "Crash Time"
-) + 
-theme_minimal()
-
-#Alcohol consumption is more common in nighttime fatal crashes (~70%) than in daytime crashes (~26%). 
-
-```{r}
-### Plot 2: Night vs. Day accidents by Driver Age
-
-driver_model_data_age <- driver_model_data |>
-  filter(AGE != 999, !is.na(AGE))
-
-ggplot(
-  driver_model_data,
-  aes(x = AGE, fill = night_binary)
-) +
-  geom_histogram(
-    binwidth = 5,
-    position = "identity",
-    alpha = 0.5
-  ) +
-  labs(
-    title = "Driver Age Distribution by Crash Time",
-    x = "Driver Age",
-    y = "Number of Drivers",
-    fill = "Crash Time"
-  ) +
-  theme_minimal()
-
-#The graph shows us that younger drivers are more likely to be involved in nighttime crashes, while older adults are more likely to have daytime crashes. While the concentration of nighttime crashes versus daytime crashes is greater among younger drivers, we know that this graph shows the distribution of drivers involved in fatal crashes rather than the likelihood of a crash occurring at a particular age. 
-```
-```{r}
-
-### Plot 3: Night vs. Day accidents by Rural vs. Urban 
-
-ggplot(
-  driver_model_data,
-  aes(x = RUR_URBNAME, fill = night_binary)
-) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
-  labs(
-    title = "Nighttime vs. Daytime Crashes by Rural/Urban Location",
-    x = "Location",
-    y = "Percentage of Crashes",
-    fill = "Crash Time"
-  ) +
-  theme_minimal()
-
-#This graph shows us that there is a higher concentration of urban crashes occurring in the nighttime versus rural crashes occurring in the daytime. The graph segregates these crashes based on those reported as rural and urban. We can see that approximately 25% of rural crashes occur in the daytime versus approximately 45% of urban crashes occurring at nighttime. 
-```
-
 ## Research Question 3 Summary
-- Alcohol involvement was the strongest predictor of weekend timing. 
-- Driver characteristics mattered: older drivers were less likely to be involved in nighttime crashes, while male drivers had higher odds of nighttime involvement
-- Weekend crashes were associated with higher travel speeds and older driver age
-- Rural/urban classification was not significant, while nighttime crash patterns varied significantly across states.
 
+-   Alcohol involvement was the strongest predictor of weekend timing.
+-   Driver characteristics mattered: older drivers were less likely to be involved in nighttime crashes, while male drivers had higher odds of nighttime involvement
+-   Weekend crashes were associated with higher travel speeds and older driver age
+-   Rural/urban classification was not significant, while nighttime crash patterns varied significantly across states.
 
-## SUMMARY
 ## Overall Project Summary
 
-**Patterns and Predictors:** 
+**Patterns and Predictors:**
 
-- **Fatal crash severity:** Rural crashes had more fatalities but was not significant after controlling for other factors. Severity was more closely related to travel speed, driver age and lighting. 
+-   **Fatal crash severity:** Rural crashes had more fatalities but was not significant after controlling for other factors. Severity was more closely related to travel speed, driver age and lighting.
 
-- **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, although sedans and pickups dominated both groups.
+-   **When crashes occur:** Weekends had more fatal crashes and were more concentrated in late-night and early-morning hours. Vehicle types differed significantly between weekend and weekday crashes, although sedans and pickups dominated both groups.
 
-- **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states.
+-   **What drives nighttime & weekend patterns:** Alcohol was the strongest and most consistent predictor. Driver characteristics and speed also mattered. Nighttime patterns varied across states.
 
+**Conceptual takeaways:**
 
-**Conceptual takeaways:** 
+-   **crash severity -\> rural had higher raw fatalities**
 
-- **crash severity -> rural had higher raw fatalities**
+-   **timing -\> more crashes/day on weekends + late-night concentration**
 
-- **timing -> more crashes/day on weekends + late-night concentration**
-
-- **key drivers: alcohol + speed + driver characteristics**
+-   **key drivers: alcohol + speed + driver characteristics**
 
 **Overall Patterns:** Fatal crash risk reflects when, where, and how crashes occur
+
+## Appendix:
+
+References:
+
+*Fatality analysis reporting system*. NHTSA. (2024). https://www.nhtsa.gov/crash-data-systems/fatality-analysis-reporting-system
+
+Data:
+
+The FARS dataset was acquired using this link:
